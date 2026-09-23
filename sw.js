@@ -1,11 +1,15 @@
 // Bump this version whenever any cached file changes, so clients pick up the update.
-const CACHE = "e-kunye-v5";
+const CACHE = "e-kunye-v6";
 const FONT_CACHE = "e-kunye-fonts";
 
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./css/style.css",
+  "./js/app.js",
+  "./lang/tr.js",
+  "./lang/en.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
