@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>E-Künye</title>
+<meta name="description" content="Kişisel bilgilerini tek dokunuşla kopyala.">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="color-scheme" content="light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="E-Künye">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Tokens: an all-white, quiet palette ---------- */
+  :root {
+    --bg: #FFFFFF;
+    --ink: #1B2029;
+    --muted: #8B929C;
+    --soft: #B9BFC7;
+    --faint: #F4F5F7;
+    --line: #E9ECEF;
+    --accent: #2E7D6F;
+    --danger: #C0392B;
+    --backdrop: rgba(20, 24, 30, 0.22);
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* ---------- Base ---------- */
+  *, *::before, *::after { box-sizing: inherit; }
+  html { height: 100%; background: var(--bg); scroll-padding-top: env(safe-area-inset-top, 0px); -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif,
+      "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body.locked { overflow: hidden; }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 12px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 max(20px, env(safe-area-inset-right, 0px)) 120px max(20px, env(safe-area-inset-left, 0px));
+  }
+
+  /* ---------- Header ---------- */
+  .top {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    padding: 12px 0 4px;
+    background: rgba(255, 255, 255, 0.9);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  h1 { margin: 0; text-align: center; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .icon-btn {
+    width: 44px; height: 44px; border: 0; border-radius: 50%;
+    display: grid; place-items: center;
+    background: none; color: var(--ink);
+  }
+  .icon-btn:active { background: var(--faint); }
+  .icon-btn svg { width: 22px; height: 22px; }
+  .hint { margin: 2px 0 12px; text-align: center; font-size: 13px; color: var(--muted); }
+
+  /* ---------- Install hint ---------- */
+  .banner {
+    position: relative;
+    margin: 4px 0 8px;
+    padding: 14px 40px;
+    border-radius: 16px;
+    background: var(--faint);
+    text-align: center;
+    font-size: 13px; line-height: 1.5; color: var(--muted);
+  }
+  .banner[hidden] { display: none; }
+  .banner p { margin: 0; }
+  .banner .install { margin-top: 10px; border: 0; border-radius: 999px; padding: 8px 16px; font-weight: 600; font-size: 13px; background: var(--ink); color: #fff; }
+  .banner .install[hidden] { display: none; }
+  .banner .close { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border: 0; background: none; font-size: 18px; color: var(--soft); }
+
+  /* ---------- List: centered emoji, name, value ---------- */
+  #list { list-style: none; margin: 0; padding: 0; }
+  #list li + li::before {
+    content: "";
+    display: block;
+    width: 28px; height: 1px;
+    margin: 0 auto;
+    background: var(--line);
+  }
+  .row {
+    display: flex; flex-direction: column; align-items: center;
+    width: 100%;
+    padding: 28px 12px;
+    border: 0; border-radius: 22px;
+    background: none;
+    text-align: center;
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+    transition: background-color 0.2s;
+  }
+  .row:active { background: var(--faint); }
+  @media (hover: hover) { .row:hover { background: var(--faint); } }
+  .emoji { font-size: 32px; line-height: 1; }
+  .title { margin-top: 12px; font-size: 13px; font-weight: 500; color: var(--muted); transition: color 0.2s; }
+  .value {
+    margin-top: 6px; max-width: 32ch;
+    font-size: 18px; line-height: 1.45; font-weight: 500;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .value.empty { font-size: 15px; font-weight: 400; color: var(--soft); }
+  .value.masked { letter-spacing: 0.22em; color: var(--ink); }
+  .row.copied .title { color: var(--accent); }
+  .empty-state { margin: 80px 24px; text-align: center; color: var(--muted); line-height: 1.6; }
+  .empty-state[hidden] { display: none; }
+
+  /* ---------- Toast ---------- */
+  .toast-layer {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    padding: 0 16px calc(28px + env(safe-area-inset-bottom, 0px));
+    display: flex; justify-content: center;
+    pointer-events: none;
+  }
+  .toast {
+    display: flex; align-items: center; gap: 16px;
+    padding: 11px 20px; border-radius: 999px;
+    background: var(--ink); color: #fff;
+    font-size: 14px; font-weight: 500;
+    opacity: 0; transform: translateY(8px); visibility: hidden;
+    transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+  }
+  .toast.show { opacity: 1; transform: none; visibility: visible; pointer-events: auto; }
+  .toast button { border: 0; background: none; padding: 4px 0; font-weight: 600; color: #9FD6CC; }
+  .toast button[hidden] { display: none; }
+
+  /* ---------- Sheets ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 20;
+    background: var(--backdrop);
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .overlay.open { display: flex; }
+  .sheet {
+    width: 100%; max-width: 480px; max-height: 92%;
+    overflow-y: auto; overscroll-behavior: contain;
+    background: var(--bg);
+    border-radius: 28px 28px 0 0;
+    padding: 10px 22px calc(22px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -8px 40px rgba(20, 24, 30, 0.08);
+    animation: sheet-up 0.24s ease-out;
+  }
+  .sheet::before {
+    content: ""; display: block;
+    width: 36px; height: 4px; border-radius: 2px;
+    margin: 0 auto 16px;
+    background: var(--line);
+  }
+  @keyframes sheet-up { from { transform: translateY(24px); opacity: 0.6; } }
+  @media (min-width: 600px) {
+    .overlay { align-items: center; }
+    .sheet { border-radius: 28px; max-height: 85%; }
+    .sheet::before { display: none; }
+    .sheet { padding-top: 24px; }
+  }
+  .sheet h2 { margin: 0; text-align: center; font-size: 17px; font-weight: 600; }
+  .field-label { display: block; margin: 20px 0 8px; font-size: 13px; color: var(--muted); }
+  .section[hidden] { display: none; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 0; border-radius: 999px; padding: 8px 14px; font-size: 14px; background: var(--faint); }
+  .chip:active { background: var(--line); }
+
+  .input {
+    width: 100%;
+    border: 0; border-radius: 14px;
+    padding: 13px 14px;
+    background: var(--faint);
+    font-size: 16px;
+  }
+  .input::placeholder { color: var(--soft); }
+  .emoji-input::placeholder { opacity: 0.35; }
+  .input:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--ink); }
+  .emoji-row { display: flex; gap: 10px; }
+  .emoji-row .emoji-input { width: 58px; flex: none; text-align: center; font-size: 24px; padding: 8px; }
+  textarea.input { min-height: 96px; resize: vertical; line-height: 1.45; }
+
+  .preset-group { border-bottom: 1px solid var(--line); }
+  .preset-group summary {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 2px;
+    list-style: none;
+    font-size: 15px; font-weight: 500;
+    cursor: pointer;
+    -webkit-user-select: none; user-select: none;
+  }
+  .preset-group summary::-webkit-details-marker { display: none; }
+  .preset-group summary .count { margin-left: auto; font-size: 13px; color: var(--soft); }
+  .preset-group summary::after {
+    content: "";
+    width: 7px; height: 7px; margin: 0 4px 3px 6px;
+    border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted);
+    transform: rotate(45deg);
+    transition: transform 0.2s;
+  }
+  .preset-group[open] summary::after { transform: rotate(-135deg); margin-bottom: -3px; }
+  .preset-group .chips { padding: 0 0 16px; }
+
+  /* Hide-in-list switch */
+  .toggle {
+    display: flex; align-items: center; gap: 14px;
+    margin-top: 16px; padding: 14px 16px;
+    border-radius: 16px; background: var(--faint);
+    cursor: pointer;
+  }
+  .toggle-text { flex: 1; }
+  .toggle-text strong { display: block; font-size: 15px; font-weight: 600; }
+  .toggle-text small { display: block; margin-top: 2px; font-size: 13px; line-height: 1.4; color: var(--muted); }
+  .toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .switch {
+    position: relative; flex: none;
+    width: 46px; height: 28px; border-radius: 14px;
+    background: #D5D9DE;
+    transition: background-color 0.2s;
+  }
+  .switch::after {
+    content: ""; position: absolute; top: 3px; left: 3px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(20, 24, 30, 0.2);
+    transition: transform 0.2s;
+  }
+  .toggle input:checked + .switch { background: var(--ink); }
+  .toggle input:checked + .switch::after { transform: translateX(18px); }
+  .toggle input:focus-visible + .switch { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .emoji-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 2px; }
+  .emoji-grid button { height: 44px; border: 0; border-radius: 12px; background: none; font-size: 22px; }
+  .emoji-grid button.selected { background: var(--faint); box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+  .sheet-actions { display: flex; align-items: center; gap: 6px; margin-top: 26px; }
+  .spacer { flex: 1; }
+  .btn { border: 0; border-radius: 999px; padding: 12px 20px; font-size: 15px; font-weight: 600; background: none; }
+  .btn[hidden] { display: none; }
+  .btn.primary { background: var(--ink); color: #fff; }
+  .btn.primary:disabled { opacity: 0.25; cursor: default; }
+  .btn.danger { color: var(--danger); padding-left: 4px; }
+  .btn.quiet { color: var(--muted); }
+
+  .menu-text { margin: 14px 0 6px; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.55; }
+  .menu-item {
+    display: block; width: 100%;
+    margin-top: 10px; padding: 16px;
+    border: 0; border-radius: 18px;
+    background: var(--faint);
+    text-align: center;
+  }
+  .menu-item:active { background: var(--line); }
+  .menu-item strong { display: block; font-size: 15px; font-weight: 600; }
+  .menu-item span { display: block; margin-top: 3px; font-size: 13px; color: var(--muted); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sheet { animation: none; }
+    .toast, .row, .title, .switch, .switch::after, .preset-group summary::after { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <button id="menuBtn" class="icon-btn" aria-label="Yedekleme">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      </button>
+      <h1>E-Künye</h1>
+      <button id="addBtn" class="icon-btn" aria-label="Yeni bilgi ekle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </header>
+    <p class="hint">Kopyalamak için dokun, düzenlemek için basılı tut.</p>
+
+    <div id="banner" class="banner" hidden>
+      <p id="bannerText"></p>
+      <button id="bannerInstall" class="install" hidden>Ana ekrana yükle</button>
+      <button id="bannerClose" class="close" aria-label="Kapat">×</button>
+    </div>
+
+    <main>
+      <ul id="list"></ul>
+      <p id="empty" class="empty-state" hidden>Listen boş.<br>Sağ üstteki + ile ilk bilgini ekle.</p>
+    </main>
+  </div>
+
+  <p id="live" class="sr-only" aria-live="polite"></p>
+
+  <!-- Toast -->
+  <div class="toast-layer">
+    <div id="toast" class="toast" role="status" aria-live="polite">
+      <span id="toastText"></span>
+      <button id="toastAction" hidden></button>
+    </div>
+  </div>
+
+  <!-- Add / edit sheet -->
+  <div id="editor" class="overlay" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+    <div class="sheet">
+      <h2 id="editorTitle">Yeni bilgi</h2>
+
+      <div id="presetSection" class="section"></div>
+
+      <label class="field-label" for="titleInput">Emoji ve başlık</label>
+      <div class="emoji-row">
+        <input id="emojiInput" class="input emoji-input" placeholder="📌" aria-label="Emoji" autocomplete="off">
+        <input id="titleInput" class="input" placeholder="Örneğin: Vergi numarası" autocomplete="off">
+      </div>
+
+      <span class="field-label">Emoji seç ya da klavyeden yaz</span>
+      <div id="emojiGrid" class="emoji-grid"></div>
+
+      <label class="field-label" for="valueInput">Kopyalanacak bilgi</label>
+      <textarea id="valueInput" class="input" placeholder="Buraya yaz" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
+
+      <label class="toggle">
+        <span class="toggle-text">
+          <strong>Listede gizle</strong>
+          <small>Noktalarla görünür, dokununca yine kopyalanır.</small>
+        </span>
+        <input id="hiddenInput" type="checkbox" role="switch">
+        <span class="switch" aria-hidden="true"></span>
+      </label>
+
+      <div class="sheet-actions">
+        <button id="deleteBtn" class="btn danger">Sil</button>
+        <span class="spacer"></span>
+        <button id="cancelBtn" class="btn quiet">Vazgeç</button>
+        <button id="saveBtn" class="btn primary">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backup sheet -->
+  <div id="menu" class="overlay" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+    <div class="sheet">
+      <h2 id="menuTitle">Yedekleme</h2>
+      <p class="menu-text">Bilgilerin yalnızca bu cihazda saklanır, hiçbir sunucuya gönderilmez. Telefon değiştirmeden ya da tarayıcı verilerini silmeden önce yedek al.</p>
+      <button id="exportBtn" class="menu-item">
+        <strong>Yedeği dışa aktar</strong>
+        <span>Bilgilerini bir dosya olarak kaydet veya paylaş</span>
+      </button>
+      <button id="importBtn" class="menu-item">
+        <strong>Yedekten geri yükle</strong>
+        <span>Şu anki listen yedekteki bilgilerle değiştirilir</span>
+      </button>
+      <input id="importInput" type="file" accept="application/json,.json" hidden>
+      <p class="menu-text">Yedek dosyası şifrelenmez, güvendiğin bir yerde sakla.</p>
+      <div class="sheet-actions">
+        <span class="spacer"></span>
+        <button id="menuClose" class="btn quiet">Kapat</button>
+        <span class="spacer"></span>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------------------------------------------------------------------------
+  // Constants
+  // ---------------------------------------------------------------------------
+  const STORE_KEY = "bilgilerim.items.v1";
+  const BANNER_KEY = "bilgilerim.installHintDismissed";
+
+  // Starter entries, grouped; all of them appear as quick picks in the "add"
+  // sheet. Only entries with `seed: true` are pre-filled into the list on first
+  // launch; users can edit or delete those. `hidden` masks the value by default.
+  const DATE_HINT = "Örneğin: 14.02.2020";
+  const IBAN_HINT = "TR ile başlayan 26 karakter";
+  const TC_HINT = "11 haneli numara";
+  const PRESET_GROUPS = [
+    {
+      label: "Benim bilgilerim",
+      items: [
+        { emoji: "🏠", title: "Ev adresi", seed: true },
+        { emoji: "🏢", title: "İş adresi", seed: true },
+        { emoji: "✉️", title: "E-posta", seed: true },
+        { emoji: "📱", title: "Telefon", seed: true },
+        { emoji: "🏦", title: "IBAN", seed: true, hint: IBAN_HINT, hidden: true },
+        { emoji: "🪪", title: "TC kimlik numaram", hint: TC_HINT, numeric: true, hidden: true },
+      ],
+    },
+    {
+      label: "Ailem",
+      items: [
+        { emoji: "👩", title: "Annemin telefonu", seed: true },
+        { emoji: "🏦", title: "Annemin IBAN'ı", hint: IBAN_HINT, hidden: true },
+        { emoji: "🪪", title: "Annemin TC kimlik numarası", hint: TC_HINT, numeric: true, hidden: true },
+        { emoji: "👨", title: "Babamın telefonu", seed: true },
+        { emoji: "🏦", title: "Babamın IBAN'ı", hint: IBAN_HINT, hidden: true },
+        { emoji: "🪪", title: "Babamın TC kimlik numarası", hint: TC_HINT, numeric: true, hidden: true },
+      ],
+    },
+    {
+      label: "Eşim",
+      items: [
+        { emoji: "💑", title: "Eşimin telefonu" },
+        { emoji: "🏦", title: "Eşimin IBAN'ı", hint: IBAN_HINT, hidden: true },
+        { emoji: "🪪", title: "Eşimin TC kimlik numarası", hint: TC_HINT, numeric: true, hidden: true },
+      ],
+    },
+    {
+      label: "Özel günler",
+      items: [
+        { emoji: "🎂", title: "Doğum günüm", hint: DATE_HINT },
+        { emoji: "🎂", title: "Eşimin doğum günü", hint: DATE_HINT },
+        { emoji: "🎂", title: "Annemin doğum günü", hint: DATE_HINT },
+        { emoji: "🎂", title: "Babamın doğum günü", hint: DATE_HINT },
+        { emoji: "☕", title: "İlk buluşma günümüz", hint: DATE_HINT },
+        { emoji: "💍", title: "Evlilik teklifi günü", hint: DATE_HINT },
+        { emoji: "🎀", title: "Nişan günümüz", hint: DATE_HINT },
+        { emoji: "💒", title: "Evlilik günümüz", hint: DATE_HINT },
+      ],
+    },
+    {
+      label: "Ev ve faturalar",
+      items: [
+        { emoji: "⚡", title: "Elektrik tesisat numarası", numeric: true },
+        { emoji: "💧", title: "Su abone numarası", numeric: true },
+        { emoji: "🔥", title: "Doğalgaz tesisat numarası", numeric: true },
+        { emoji: "🌐", title: "İnternet abone numarası" },
+        { emoji: "📮", title: "Posta kodu", hint: "5 haneli kod", numeric: true },
+        { emoji: "📶", title: "Wi-Fi şifresi", hidden: true },
+        { emoji: "🔢", title: "Kapı kodu", hidden: true },
+      ],
+    },
+    {
+      label: "Araç",
+      items: [
+        { emoji: "🚗", title: "Plaka", hint: "Örneğin: 34 ABC 123" },
+        { emoji: "📄", title: "Ruhsat seri numarası", hidden: true },
+        { emoji: "🛡️", title: "Trafik sigortası poliçe numarası", hidden: true },
+        { emoji: "🛡️", title: "Kasko poliçe numarası", hidden: true },
+        { emoji: "🛣️", title: "HGS numarası", numeric: true },
+      ],
+    },
+    {
+      label: "Sağlık ve acil durum",
+      items: [
+        { emoji: "🩸", title: "Kan grubu", seed: true, hint: "Örneğin: A Rh+" },
+        { emoji: "💊", title: "Kullandığım ilaçlar", seed: true },
+        { emoji: "⚠️", title: "Alerjilerim" },
+        { emoji: "🩺", title: "Kronik rahatsızlıklarım" },
+        { emoji: "👨‍⚕️", title: "Doktorumun telefonu" },
+        { emoji: "🏥", title: "Sağlık sigortası poliçe numarası", hidden: true },
+        { emoji: "🆘", title: "Acil durumda aranacak kişi", hint: "Ad, yakınlık ve telefon" },
+      ],
+    },
+  ];
+  const PRESETS = PRESET_GROUPS.flatMap((g) => g.items);
+  const findPreset = (title) => PRESETS.find((p) => p.title === title) || null;
+
+  const EMOJIS = [
+    "🏠", "🏡", "🏢", "📍", "✉️", "📧", "📱", "📞",
+    "🏦", "💳", "💰", "🧾", "🪪", "🛂", "🚗", "🔑",
+    "🩸", "💊", "🩺", "🏥", "🚑", "❤️", "👩", "👨",
+    "👵", "👴", "👶", "👫", "💼", "🎓", "🌐", "📦",
+    "🐾", "✈️", "📝", "⭐", "📌", "🔒",
+    "☕", "💍", "🎀", "💒", "💐", "🎂", "🥂", "📅",
+    "💑", "⚡", "💧", "🔥", "📮", "📶", "🔢", "📄",
+    "🛡️", "🛣️", "⚠️", "👨‍⚕️", "🆘",
+  ];
+
+  // ---------------------------------------------------------------------------
+  // DOM refs
+  // ---------------------------------------------------------------------------
+  const $ = (sel) => document.querySelector(sel);
+  const listEl = $("#list");
+  const emptyEl = $("#empty");
+  const editor = $("#editor");
+  const menu = $("#menu");
+  const editorTitle = $("#editorTitle");
+  const presetSection = $("#presetSection");
+  const presetChips = $("#presetChips");
+  const emojiInput = $("#emojiInput");
+  const titleInput = $("#titleInput");
+  const valueInput = $("#valueInput");
+  const emojiGrid = $("#emojiGrid");
+  const deleteBtn = $("#deleteBtn");
+  const saveBtn = $("#saveBtn");
+  const toastEl = $("#toast");
+  const toastText = $("#toastText");
+  const toastAction = $("#toastAction");
+  const importInput = $("#importInput");
+  const liveEl = $("#live");
+  const hiddenInput = $("#hiddenInput");
+
+  // ---------------------------------------------------------------------------
+  // State & persistence (localStorage, device-only)
+  // ---------------------------------------------------------------------------
+  let items = [];
+  let editingId = null; // null means the editor is adding a new entry
+
+  const uid = () =>
+    window.crypto && crypto.randomUUID
+      ? crypto.randomUUID()
+      : Date.now().toString(36) + Math.random().toString(36).slice(2);
+
+  // Current record shape: { id, emoji, title, value, hidden }.
+  // Every record from storage or a backup file goes through this function, so
+  // older data (missing fields, extra fields, wrong types) always loads safely.
+  // Rule for future versions: only add fields with defaults here; never rename
+  // or make a field required without mapping the old name first.
+  function normalizeItem(x, keepId) {
+    if (!x || typeof x !== "object") return null;
+    const title = typeof x.title === "string" ? x.title.trim() : "";
+    if (!title) return null;
+    return {
+      id: keepId && typeof x.id === "string" && x.id ? x.id : uid(),
+      emoji: typeof x.emoji === "string" && x.emoji.trim() ? x.emoji.trim() : "📌",
+      title,
+      value: typeof x.value === "string" ? x.value : "",
+      hidden: x.hidden === true,
+    };
+  }
+
+  function normalizeList(list, keepIds) {
+    if (!Array.isArray(list)) return [];
+    const seen = new Set();
+    const out = [];
+    for (const raw of list) {
+      const item = normalizeItem(raw, keepIds);
+      if (!item) continue;
+      if (seen.has(item.id)) item.id = uid(); // guard against duplicate ids
+      seen.add(item.id);
+      out.push(item);
+    }
+    return out;
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return normalizeList(parsed, true);
+      }
+    } catch (_) { /* storage unavailable or corrupt: fall through */ }
+    return null;
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(items));
+    } catch (_) {
+      showToast("Kaydedilemedi, tarayıcı depolaması kapalı olabilir");
+    }
+  }
+
+  function seedPresets() {
+    return PRESETS.filter((p) => p.seed).map((p) => ({ id: uid(), emoji: p.emoji, title: p.title, value: "", hidden: !!p.hidden }));
+  }
+
+  // Ask the browser not to evict our data under storage pressure (Chromium).
+  function requestPersistence() {
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persisted()
+        .then((already) => { if (!already) return navigator.storage.persist(); })
+        .catch(() => {});
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+  // Returns the last user-visible character, so multi-codepoint emoji
+  // (flags, skin tones, ZWJ sequences) stay intact.
+  function lastGrapheme(str) {
+    if (!str) return "";
+    if (window.Intl && Intl.Segmenter) {
+      const segs = [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(str)];
+      return segs.length ? segs[segs.length - 1].segment : "";
+    }
+    return Array.from(str).pop() || "";
+  }
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (_) {
+      // Fallback for contexts where the async Clipboard API is blocked.
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      let ok = false;
+      try { ok = document.execCommand("copy"); } catch (_) {}
+      ta.remove();
+      return ok;
+    }
+  }
+
+  const vibrate = (ms) => { if (navigator.vibrate) navigator.vibrate(ms); };
+
+  // ---------------------------------------------------------------------------
+  // Toast
+  // ---------------------------------------------------------------------------
+  let toastTimer = null;
+
+  function showToast(message, action) {
+    toastText.textContent = message;
+    if (action) {
+      toastAction.hidden = false;
+      toastAction.textContent = action.label;
+      toastAction.onclick = () => { action.fn(); hideToast(); };
+    } else {
+      toastAction.hidden = true;
+      toastAction.onclick = null;
+    }
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, action ? 4500 : 1600);
+  }
+
+  function hideToast() {
+    toastEl.classList.remove("show");
+  }
+
+  // ---------------------------------------------------------------------------
+  // List rendering
+  // ---------------------------------------------------------------------------
+  function render() {
+    listEl.replaceChildren();
+    for (const item of items) {
+      const li = document.createElement("li");
+      const row = document.createElement("button");
+      row.className = "row";
+      row.type = "button";
+      row.dataset.id = item.id;
+
+      const emoji = document.createElement("span");
+      emoji.className = "emoji";
+      emoji.textContent = item.emoji || "📌";
+      emoji.setAttribute("aria-hidden", "true");
+
+      const title = document.createElement("span");
+      title.className = "title";
+      title.textContent = item.title;
+
+      const value = document.createElement("span");
+      const isEmpty = !item.value.trim();
+      if (isEmpty) {
+        value.className = "value empty";
+        value.textContent = "Eklemek için dokun";
+      } else if (item.hidden) {
+        // Fixed-length mask so the real length is not revealed either.
+        value.className = "value masked";
+        value.textContent = "••••••••";
+        row.setAttribute("aria-label", `${item.title}, gizli bilgi. Kopyalamak için dokun.`);
+      } else {
+        value.className = "value";
+        value.textContent = item.value;
+      }
+
+      row.append(emoji, title, value);
+      attachPressHandlers(row, item.id);
+      li.appendChild(row);
+      listEl.appendChild(li);
+    }
+    emptyEl.hidden = items.length > 0;
+  }
+
+  // Tap copies, long press (or right click / "e" key) opens the editor.
+  function attachPressHandlers(row, id) {
+    let timer = null;
+    let longPressed = false;
+    let startX = 0;
+    let startY = 0;
+
+    const cancel = () => { clearTimeout(timer); timer = null; };
+
+    row.addEventListener("pointerdown", (e) => {
+      longPressed = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      cancel();
+      timer = setTimeout(() => {
+        longPressed = true;
+        vibrate(15);
+        openEditor(id);
+      }, 450);
+    });
+    row.addEventListener("pointermove", (e) => {
+      if (timer && Math.hypot(e.clientX - startX, e.clientY - startY) > 10) cancel();
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach((t) => row.addEventListener(t, cancel));
+
+    row.addEventListener("click", (e) => {
+      if (longPressed) { e.preventDefault(); longPressed = false; return; }
+      handleTap(id, row);
+    });
+    row.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      if (!longPressed) { cancel(); openEditor(id); }
+    });
+    row.addEventListener("keydown", (e) => {
+      if (e.key === "e" || e.key === "E") { e.preventDefault(); openEditor(id); }
+    });
+  }
+
+  async function handleTap(id, row) {
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+    if (!item.value.trim()) { openEditor(id); return; }
+
+    const ok = await copyText(item.value);
+    if (ok) {
+      vibrate(20);
+      // Quiet in-place confirmation: the name briefly reads "Kopyalandı".
+      const titleEl = row.querySelector(".title");
+      clearTimeout(row._copiedTimer);
+      row.classList.add("copied");
+      titleEl.textContent = "Kopyalandı";
+      row._copiedTimer = setTimeout(() => {
+        row.classList.remove("copied");
+        titleEl.textContent = item.title;
+      }, 1100);
+      liveEl.textContent = `${item.title} kopyalandı`;
+    } else {
+      showToast("Kopyalanamadı, tarayıcı izin vermedi");
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sheets (shared open/close)
+  // ---------------------------------------------------------------------------
+  function openOverlay(el) {
+    el.classList.add("open");
+    document.body.classList.add("locked");
+  }
+
+  function closeOverlay(el) {
+    el.classList.remove("open");
+    if (!document.querySelector(".overlay.open")) document.body.classList.remove("locked");
+  }
+
+  // Close on backdrop tap, but only if the press also started on the backdrop.
+  // This prevents the long-press release from instantly closing the editor.
+  [editor, menu].forEach((overlay) => {
+    let downOnBackdrop = false;
+    overlay.addEventListener("pointerdown", (e) => { downOnBackdrop = e.target === overlay; });
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay && downOnBackdrop) closeOverlay(overlay);
+      downOnBackdrop = false;
+    });
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (editor.classList.contains("open")) closeOverlay(editor);
+    else if (menu.classList.contains("open")) closeOverlay(menu);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Editor
+  // ---------------------------------------------------------------------------
+  function buildEmojiGrid() {
+    for (const e of EMOJIS) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = e;
+      b.setAttribute("aria-label", `Emoji ${e}`);
+      b.addEventListener("click", () => {
+        emojiInput.value = e;
+        syncEmojiSelection();
+      });
+      emojiGrid.appendChild(b);
+    }
+  }
+
+  function syncEmojiSelection() {
+    const current = emojiInput.value;
+    for (const b of emojiGrid.children) b.classList.toggle("selected", b.textContent === current);
+  }
+
+  function applyPresetHints(preset) {
+    valueInput.placeholder = (preset && preset.hint) || "Buraya yaz";
+    valueInput.inputMode = preset && preset.numeric ? "numeric" : "text";
+  }
+
+  function buildPresetChips() {
+    presetSection.replaceChildren();
+    const heading = document.createElement("span");
+    heading.className = "field-label";
+    heading.textContent = "Hazır seçenekler";
+    presetSection.appendChild(heading);
+
+    for (const group of PRESET_GROUPS) {
+      const wrap = document.createElement("details");
+      wrap.className = "preset-group";
+      const label = document.createElement("summary");
+      const name = document.createElement("span");
+      name.textContent = group.label;
+      const count = document.createElement("span");
+      count.className = "count";
+      count.textContent = String(group.items.length);
+      label.append(name, count);
+      const chips = document.createElement("div");
+      chips.className = "chips";
+      for (const p of group.items) {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "chip";
+        chip.textContent = `${p.emoji} ${p.title}`;
+        chip.addEventListener("click", () => {
+          emojiInput.value = p.emoji;
+          titleInput.value = p.title;
+          hiddenInput.checked = !!p.hidden;
+          applyPresetHints(p);
+          syncEmojiSelection();
+          updateSaveState();
+          valueInput.focus();
+        });
+        chips.appendChild(chip);
+      }
+      wrap.append(label, chips);
+      presetSection.appendChild(wrap);
+    }
+  }
+
+  function updateSaveState() {
+    saveBtn.disabled = titleInput.value.trim().length === 0;
+  }
+
+  function openEditor(id) {
+    const item = id ? items.find((i) => i.id === id) : null;
+    editingId = item ? item.id : null;
+
+    editorTitle.textContent = item ? "Bilgiyi düzenle" : "Yeni bilgi";
+    presetSection.hidden = !!item;
+    presetSection.querySelectorAll("details").forEach((d) => { d.open = false; });
+    deleteBtn.hidden = !item;
+
+    emojiInput.value = item ? item.emoji : "";
+    titleInput.value = item ? item.title : "";
+    valueInput.value = item ? item.value : "";
+    hiddenInput.checked = item ? item.hidden : false;
+    applyPresetHints(item ? findPreset(item.title) : null);
+    syncEmojiSelection();
+    updateSaveState();
+
+    openOverlay(editor);
+    editor.querySelector(".sheet").scrollTop = 0;
+    // Jump straight to the value field when filling in an empty preset.
+    if (item && !item.value.trim()) setTimeout(() => valueInput.focus(), 50);
+  }
+
+  emojiInput.addEventListener("input", () => {
+    emojiInput.value = lastGrapheme(emojiInput.value.trim());
+    syncEmojiSelection();
+  });
+  titleInput.addEventListener("input", updateSaveState);
+
+  saveBtn.addEventListener("click", () => {
+    const title = titleInput.value.trim();
+    if (!title) return;
+    const entry = {
+      id: editingId || uid(),
+      emoji: emojiInput.value.trim() || "📌",
+      title,
+      value: valueInput.value.trim(),
+      hidden: hiddenInput.checked,
+    };
+    const idx = items.findIndex((i) => i.id === entry.id);
+    if (idx >= 0) items[idx] = entry;
+    else items.push(entry);
+    save();
+    render();
+    closeOverlay(editor);
+    showToast(idx >= 0 ? "Kaydedildi" : `${entry.title} eklendi`);
+  });
+
+  deleteBtn.addEventListener("click", () => {
+    const idx = items.findIndex((i) => i.id === editingId);
+    if (idx < 0) return;
+    const [removed] = items.splice(idx, 1);
+    save();
+    render();
+    closeOverlay(editor);
+    showToast(`${removed.title} silindi`, {
+      label: "Geri al",
+      fn: () => {
+        items.splice(Math.min(idx, items.length), 0, removed);
+        save();
+        render();
+      },
+    });
+  });
+
+  $("#cancelBtn").addEventListener("click", () => closeOverlay(editor));
+  $("#addBtn").addEventListener("click", () => openEditor(null));
+
+  // ---------------------------------------------------------------------------
+  // Backup: export / import as JSON
+  // ---------------------------------------------------------------------------
+  async function exportBackup() {
+    const data = { app: "e-kunye", version: 2, exportedAt: new Date().toISOString(), items };
+    const name = `e-kunye-yedek-${new Date().toISOString().slice(0, 10)}.json`;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+
+    // Prefer the native share sheet (lets iOS users "Save to Files").
+    try {
+      const file = new File([blob], name, { type: "application/json" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "E-Künye yedeği" });
+        closeOverlay(menu);
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === "AbortError") return; // user dismissed the share sheet
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    closeOverlay(menu);
+    showToast("Yedek indirildi");
+  }
+
+  async function importBackup(file) {
+    let parsed;
+    try {
+      parsed = JSON.parse(await file.text());
+    } catch (_) {
+      showToast("Dosya okunamadı, geçerli bir yedek değil");
+      return;
+    }
+    const source = Array.isArray(parsed) ? parsed : parsed && parsed.items;
+    if (!Array.isArray(source)) {
+      showToast("Bu dosyada bilgi bulunamadı");
+      return;
+    }
+    // Backups v1 (no `hidden`) and v2 share the same shape; normalizeItem
+    // fills in anything missing. Add version-specific migrations here if the
+    // shape ever changes.
+    const restored = normalizeList(source, false);
+    if (!restored.length) {
+      showToast("Bu dosyada bilgi bulunamadı");
+      return;
+    }
+    if (!confirm(`Şu anki listen, yedekteki ${restored.length} bilgiyle değiştirilecek. Devam edilsin mi?`)) return;
+
+    items = restored;
+    save();
+    render();
+    closeOverlay(menu);
+    showToast(`${restored.length} bilgi geri yüklendi`);
+  }
+
+  $("#menuBtn").addEventListener("click", () => openOverlay(menu));
+  $("#menuClose").addEventListener("click", () => closeOverlay(menu));
+  $("#exportBtn").addEventListener("click", exportBackup);
+  $("#importBtn").addEventListener("click", () => importInput.click());
+  importInput.addEventListener("change", async () => {
+    const file = importInput.files && importInput.files[0];
+    if (file) await importBackup(file);
+    importInput.value = "";
+  });
+
+  // ---------------------------------------------------------------------------
+  // "Add to home screen" hint (installed apps keep their storage reliably)
+  // ---------------------------------------------------------------------------
+  const banner = $("#banner");
+  const bannerText = $("#bannerText");
+  const bannerInstall = $("#bannerInstall");
+  let deferredPrompt = null;
+
+  function isStandalone() {
+    return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  }
+
+  function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
+  function updateBanner() {
+    let dismissed = false;
+    try { dismissed = localStorage.getItem(BANNER_KEY) === "1"; } catch (_) {}
+    const touch = window.matchMedia("(pointer: coarse)").matches;
+
+    if (isStandalone() || !touch || dismissed) { banner.hidden = true; return; }
+
+    if (isIOS()) {
+      bannerText.textContent = "Bilgilerinin kalıcı olması için Safari'de Paylaş simgesine dokun ve Ana Ekrana Ekle'yi seç.";
+      bannerInstall.hidden = true;
+    } else if (deferredPrompt) {
+      bannerText.textContent = "Ana ekrana yüklersen bilgilerin kalıcı olur ve uygulama internetsiz de açılır.";
+      bannerInstall.hidden = false;
+    } else {
+      bannerText.textContent = "Tarayıcı menüsünden Ana ekrana ekle'yi seçerek uygulama gibi kullanabilirsin.";
+      bannerInstall.hidden = true;
+    }
+    banner.hidden = false;
+  }
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    updateBanner();
+  });
+  bannerInstall.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try { await deferredPrompt.userChoice; } catch (_) {}
+    deferredPrompt = null;
+    updateBanner();
+  });
+  $("#bannerClose").addEventListener("click", () => {
+    try { localStorage.setItem(BANNER_KEY, "1"); } catch (_) {}
+    banner.hidden = true;
+  });
+
+  // ---------------------------------------------------------------------------
+  // Boot
+  // ---------------------------------------------------------------------------
+  const stored = load();
+  items = stored || seedPresets();
+  save(); // writes seeds on first launch and upgrades older records in place
+
+  buildEmojiGrid();
+  buildPresetChips();
+  render();
+  updateBanner();
+  requestPersistence();
+
+  // Offline support. Service workers need HTTPS (or localhost).
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
