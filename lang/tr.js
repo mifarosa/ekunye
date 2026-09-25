@@ -6,6 +6,12 @@
     menu: "Menü",
     addNew: "Yeni bilgi ekle",
     tapHint: "Kopyalamak için dokun, düzenlemek veya silmek için basılı tut.",
+    sortHint: "Okları kullanarak sırayı değiştir, bitince Bitti’ye dokun.",
+    sortStart: "↕ Sırala",
+    sortDone: "✓ Bitti",
+    moveUp: "Yukarı taşı",
+    moveDown: "Aşağı taşı",
+    movedTo: (title, n) => `${title}, ${n}. sıraya taşındı`,
     close: "Kapat",
     emptyState: "Listen boş.<br>Sağ üstteki + ile ilk bilgini ekle.",
 

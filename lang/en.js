@@ -6,6 +6,12 @@
     menu: "Menu",
     addNew: "Add new entry",
     tapHint: "Tap to copy, hold to edit or delete.",
+    sortHint: "Use the arrows to change the order, then tap Done.",
+    sortStart: "↕ Reorder",
+    sortDone: "✓ Done",
+    moveUp: "Move up",
+    moveDown: "Move down",
+    movedTo: (title, n) => `${title} moved to position ${n}`,
     close: "Close",
     emptyState: "Your list is empty.<br>Tap + at the top right to add your first entry.",
 

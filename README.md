@@ -17,7 +17,7 @@ Available in Turkish and English.
 - **Tap to copy, hold to edit.** On desktop, right-click or press <kbd>E</kbd> to edit.
 - **Ready-made fields in groups:** my details, family, spouse, special dates, home and bills, car, and health and emergency. Each field comes with a matching emoji, input hint and keyboard type.
 - **Field types:** text, long text, phone, email, number, IBAN, national ID, date and blood type. Each type opens the right keyboard and tidies the value on save (IBAN in groups of four, phone numbers, dates as DD.MM.YYYY). It also warns about likely typos, such as a wrong IBAN check digit or an invalid Turkish ID number, without blocking the save. Blood type is picked from a list.
-- **Fully editable:** rename, delete or re-emoji any field, or add your own.
+- **Fully editable:** rename, delete or re-emoji any field, or add your own. **Reorder** mode moves rows up and down.
 - **Hide in list:** sensitive values such as IBANs, ID numbers and Wi-Fi passwords show as dots but still copy on tap.
 - **Optional sync:** sign in with Google to see the same list on your phone and computer. Entries are encrypted on the device with a sync password before upload.
 - **Backup and restore:** export the whole list as a JSON file (through the share sheet where the browser supports it) and restore it on any device.

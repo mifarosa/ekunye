@@ -93,6 +93,21 @@ h1 { margin: 0; text-align: center; font-size: 19px; font-weight: 600; letter-sp
 .banner .install:active { transform: scale(0.98); }
 .banner .close { position: absolute; top: 8px; right: 8px; width: 36px; height: 36px; border: 0; background: none; font-size: 20px; color: var(--muted); }
 
+/* ---------- Reorder ---------- */
+.list-tools { display: flex; justify-content: center; margin: -4px 0 10px; }
+.list-tools[hidden] { display: none; }
+.pill-btn { border: 0; border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; background: var(--faint); color: var(--muted); }
+.pill-btn[aria-pressed="true"] { background: var(--ink); color: #fff; }
+body.sorting #list li + li::before { width: 100%; }
+.sort-row { display: flex; align-items: center; gap: 12px; padding: 8px 4px 8px 12px; }
+.sort-row .emoji { flex: none; width: 30px; text-align: center; font-size: 22px; }
+body.sorting .banner { display: none; }
+.sort-title { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.move-btn { flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%; display: grid; place-items: center; background: none; color: var(--ink); }
+.move-btn:active { background: var(--faint); }
+.move-btn:disabled { color: var(--line); cursor: default; }
+.move-btn svg { width: 20px; height: 20px; }
+
 /* ---------- List: centered emoji, name, value ---------- */
 #list { list-style: none; margin: 0; padding: 0; }
 #list li + li::before {

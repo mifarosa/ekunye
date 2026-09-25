@@ -378,8 +378,82 @@
   // ---------------------------------------------------------------------------
   // List rendering
   // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Reorder mode: arrows move rows up and down; taps don't copy meanwhile.
+  // ---------------------------------------------------------------------------
+  const hintEl = $("#hint");
+  const sortBtn = $("#sortBtn");
+  let sorting = false;
+
+  function setSorting(on) {
+    sorting = on && items.length > 1;
+    render();
+  }
+
+  function moveItem(id, delta) {
+    const from = items.findIndex((i) => i.id === id);
+    const to = from + delta;
+    if (from < 0 || to < 0 || to >= items.length) return;
+    const [item] = items.splice(from, 1);
+    items.splice(to, 0, item);
+    save();
+    render();
+    liveEl.textContent = t("movedTo", item.title, to + 1);
+    // Keep focus on the arrow that was used, or the other one at the ends.
+    const row = listEl.querySelector(`[data-id="${CSS.escape(id)}"]`);
+    const btns = row ? row.querySelectorAll(".move-btn") : [];
+    const next = delta < 0 ? btns[0] : btns[1];
+    (next && !next.disabled ? next : [...btns].find((b) => !b.disabled))?.focus();
+  }
+
+  function renderSortRow(item, index) {
+    const row = document.createElement("div");
+    row.className = "sort-row";
+    row.dataset.id = item.id;
+
+    const emoji = document.createElement("span");
+    emoji.className = "emoji";
+    emoji.textContent = item.emoji || "📌";
+    emoji.setAttribute("aria-hidden", "true");
+
+    const title = document.createElement("span");
+    title.className = "sort-title";
+    title.textContent = item.title;
+
+    row.append(emoji, title);
+    for (const [delta, key, path] of [[-1, "moveUp", "M12 19V5M5 12l7-7 7 7"], [1, "moveDown", "M12 5v14M5 12l7 7 7-7"]]) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "move-btn";
+      btn.setAttribute("aria-label", `${t(key)}: ${item.title}`);
+      btn.disabled = delta < 0 ? index === 0 : index === items.length - 1;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
+      btn.addEventListener("click", () => moveItem(item.id, delta));
+      row.appendChild(btn);
+    }
+    return row;
+  }
+
+  sortBtn.addEventListener("click", () => setSorting(!sorting));
+
   function render() {
+    if (sorting && items.length < 2) sorting = false;
+    document.body.classList.toggle("sorting", sorting);
+    hintEl.textContent = t(sorting ? "sortHint" : "tapHint");
+    sortBtn.textContent = t(sorting ? "sortDone" : "sortStart");
+    sortBtn.setAttribute("aria-pressed", String(sorting));
+    sortBtn.parentElement.hidden = items.length < 2;
+
     listEl.replaceChildren();
+    if (sorting) {
+      items.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.appendChild(renderSortRow(item, index));
+        listEl.appendChild(li);
+      });
+      emptyEl.hidden = true;
+      return;
+    }
     for (const item of items) {
       const li = document.createElement("li");
       const row = document.createElement("button");
