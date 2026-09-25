@@ -57,6 +57,10 @@ const forgetKey = (uid) => keyStore("readwrite", (s) => s.delete(uid)).catch(() 
 // Controller
 // ---------------------------------------------------------------------------
 export function start(store) {
+  if (!window.isSecureContext || !crypto.subtle) {
+    store.setSyncView({ state: "error", message: "syncNeedsHttps" });
+    return { signIn() {}, unlock() {}, signOut() {}, retry() { location.reload(); } };
+  }
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   let db;

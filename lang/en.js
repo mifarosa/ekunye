@@ -66,6 +66,7 @@
     syncStarted: "Sync is on",
     syncKeyChanged: "Your sync password was changed on another device. Enter the new password.",
     signInFailed: "Couldn’t sign in with Google",
+    syncNeedsHttps: "Sync only works over a secure connection (https). Open the page with https://.",
     popupBlocked: "Your browser blocked the Google sign-in window. Allow pop-ups for this site and try again.",
 
     pwCreateTitle: "Choose a sync password",
