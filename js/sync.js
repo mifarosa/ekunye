@@ -285,6 +285,7 @@ export function start(store) {
       remote,
       firstLink,
       normalize: store.normalize,
+      keyOf: store.presetKey,
     });
     if (result.changed) store.applyRemote(result.items, result.tombstones);
     try { localStorage.setItem(LINKED_KEY, uid); } catch (_) {}

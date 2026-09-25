@@ -74,18 +74,22 @@ export async function verifyCheck(key, check, uid) {
 //   firstLink:  true the first time this device joins this account; untouched
 //               empty starter entries that the account already has are dropped
 //               instead of being uploaded as duplicates.
+//   keyOf:      title -> language-independent preset id (or null), so
+//               "Ev adresi" and "Home address" count as the same field.
+//   now:        timestamp for deletions made while removing duplicates.
 // Returns { items, tombstones, changed, push } where push lists the ids whose
 // local version is newer than the cloud's.
-export function reconcile({ local, tombstones, remote, firstLink, normalize }) {
+export function reconcile({ local, tombstones, remote, firstLink, normalize, keyOf = () => null, now = Date.now() }) {
+  const fieldKey = (title) => keyOf(title) || `title:${title}`;
   const localById = new Map(local.map((item, pos) => [item.id, { item, pos }]));
   const tomb = { ...tombstones };
 
   const drop = new Set();
   if (firstLink) {
-    const remoteTitles = new Set();
-    for (const r of remote.values()) if (!r.deleted && r.data) remoteTitles.add(r.data.title);
+    const remoteFields = new Set();
+    for (const r of remote.values()) if (!r.deleted && r.data) remoteFields.add(fieldKey(r.data.title));
     for (const item of local) {
-      if (!remote.has(item.id) && !item.value.trim() && remoteTitles.has(item.title)) drop.add(item.id);
+      if (!remote.has(item.id) && !item.value.trim() && remoteFields.has(fieldKey(item.title))) drop.add(item.id);
     }
   }
 
@@ -115,8 +119,48 @@ export function reconcile({ local, tombstones, remote, firstLink, normalize }) {
   }
 
   merged.sort((a, b) => a.pos - b.pos || a.order - b.order);
-  const items = merged.map((m) => m.item);
+  let items = merged.map((m) => m.item);
+
+  // Clean up duplicates of the same field, e.g. left over from two devices
+  // that started in different languages. Only copies that add nothing are
+  // removed: empty ones next to a filled one, or exact repeats. The survivor
+  // is picked by id so every device removes the same copies.
+  const removed = findDuplicates(items, fieldKey);
+  if (removed.size) {
+    items = items.filter((item) => !removed.has(item.id));
+    for (const id of removed) {
+      tomb[id] = Math.max(now, (localById.get(id)?.item.updatedAt || 0) + 1, (remote.get(id)?.updatedAt || 0) + 1);
+      if (!push.includes(id)) push.push(id);
+    }
+  }
+
   const changed =
     JSON.stringify(items) !== JSON.stringify(local) || JSON.stringify(tomb) !== JSON.stringify(tombstones);
   return { items, tombstones: tomb, changed, push };
+}
+
+export function findDuplicates(items, fieldKey) {
+  const groups = new Map();
+  for (const item of items) {
+    const key = fieldKey(item.title);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+  const removed = new Set();
+  const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    const filled = group.filter((i) => i.value.trim());
+    const empty = group.filter((i) => !i.value.trim()).sort(byId);
+    // Empty copies go if the field is filled somewhere; otherwise keep one.
+    empty.slice(filled.length ? 0 : 1).forEach((i) => removed.add(i.id));
+    // Filled copies go only when they repeat the same value exactly.
+    const seen = new Map();
+    for (const item of [...filled].sort(byId)) {
+      const sig = JSON.stringify([item.value.trim(), item.hidden]);
+      if (seen.has(sig)) removed.add(item.id);
+      else seen.set(sig, item.id);
+    }
+  }
+  return removed;
 }

@@ -814,6 +814,7 @@
     getTombstones: () => tombstones,
     applyRemote,
     normalize: (x) => normalizeItem(x, true),
+    presetKey: (title) => { const p = findPreset(title); return p ? p.id : null; },
     onLocalChange: (fn) => syncListeners.push(fn),
     setSyncView,
     setSyncEnabled,
