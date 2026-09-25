@@ -136,7 +136,8 @@ export function start(store) {
       await signInWithPopup(auth, provider);
     } catch (err) {
       const code = err && err.code;
-      if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
+      if (code === "auth/operation-not-supported-in-this-environment") {
+        // No popups at all (some in-app browsers): fall back to a redirect.
         store.setSyncEnabled(true); // so the page loads sync again when it comes back
         await signInWithRedirect(auth, provider);
         return;
@@ -145,7 +146,7 @@ export function start(store) {
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
         store.setSyncView({ state: "off" });
       } else {
-        fail(err, "signInFailed");
+        fail(err, code === "auth/popup-blocked" ? "popupBlocked" : "signInFailed");
       }
     }
   }

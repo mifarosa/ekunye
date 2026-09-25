@@ -66,6 +66,7 @@
     syncStarted: "Eşitleme açıldı",
     syncKeyChanged: "Eşitleme parolası başka bir cihazda değiştirildi. Yeni parolayı gir.",
     signInFailed: "Google ile giriş yapılamadı",
+    popupBlocked: "Tarayıcı Google giriş penceresini engelledi. Bu site için açılır pencerelere izin verip tekrar dene.",
 
     pwCreateTitle: "Eşitleme parolası belirle",
     pwCreateText: "Bilgilerin bu parolayla şifrelenir; diğer cihazlarında da bu parolayı gireceksin. Unutursan buluttaki kopya açılamaz, o yüzden güvenli bir yere not et.",

@@ -66,6 +66,7 @@
     syncStarted: "Sync is on",
     syncKeyChanged: "Your sync password was changed on another device. Enter the new password.",
     signInFailed: "Couldn’t sign in with Google",
+    popupBlocked: "Your browser blocked the Google sign-in window. Allow pop-ups for this site and try again.",
 
     pwCreateTitle: "Choose a sync password",
     pwCreateText: "Your entries are encrypted with this password, and you’ll enter it on your other devices too. If you forget it, the cloud copy can’t be opened, so keep it somewhere safe.",

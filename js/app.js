@@ -690,9 +690,9 @@
 
   $("#menuBtn").addEventListener("click", () => {
     openOverlay(menu);
-    // Fetch the sync code early: the Google sign-in popup must open right
+    // Load and start sync early: the Google sign-in popup must open right
     // after the tap, or browsers (Safari especially) block it.
-    if (!syncEnabled()) import("./sync.js").catch(() => {});
+    if (!syncEnabled()) loadSync().catch(() => {});
   });
   $("#menuClose").addEventListener("click", () => closeOverlay(menu));
   $("#exportBtn").addEventListener("click", exportBackup);
