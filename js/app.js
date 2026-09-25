@@ -8,6 +8,8 @@
   const BANNER_KEY = "bilgilerim.installHintDismissed";
 
   const LANG_KEY = "bilgilerim.lang";
+  const TOMB_KEY = "bilgilerim.deleted.v1";
+  const SYNC_KEY = "bilgilerim.sync"; // "1" once the user has turned on sync
 
   // Starter entries, grouped; all of them appear as quick picks in the "add"
   // sheet. Only entries with `seed: true` are pre-filled into the list on first
@@ -167,6 +169,8 @@
   // State & persistence (localStorage, device-only)
   // ---------------------------------------------------------------------------
   let items = [];
+  let tombstones = {}; // id -> time of deletion, so sync can pass deletes on
+  let lastSaved = new Map(); // id -> content key at the last save
   let editingId = null; // null means the editor is adding a new entry
 
   const uid = () =>
@@ -174,7 +178,7 @@
       ? crypto.randomUUID()
       : Date.now().toString(36) + Math.random().toString(36).slice(2);
 
-  // Current record shape: { id, emoji, title, value, hidden }.
+  // Current record shape: { id, emoji, title, value, hidden, updatedAt }.
   // Every record from storage or a backup file goes through this function, so
   // older data (missing fields, extra fields, wrong types) always loads safely.
   // Rule for future versions: only add fields with defaults here; never rename
@@ -189,6 +193,7 @@
       title,
       value: typeof x.value === "string" ? x.value : "",
       hidden: x.hidden === true,
+      updatedAt: Number.isFinite(x.updatedAt) ? x.updatedAt : 0,
     };
   }
 
@@ -217,12 +222,59 @@
     return null;
   }
 
-  function save() {
+  function loadTombstones() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(TOMB_KEY) || "{}");
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+    } catch (_) {}
+    return {};
+  }
+
+  // What sync compares: the visible fields plus the position in the list.
+  const contentKey = (item, pos) => JSON.stringify([item.emoji, item.title, item.value, item.hidden, pos]);
+  const snapshotOf = (list) => new Map(list.map((item, pos) => [item.id, contentKey(item, pos)]));
+
+  function persist() {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify(items));
+      localStorage.setItem(TOMB_KEY, JSON.stringify(tombstones));
     } catch (_) {
       showToast(t("saveFailed"));
     }
+  }
+
+  // Every local edit ends here: stamp what changed, record deletions and tell
+  // sync (when it is on) which ids to send.
+  function save() {
+    const now = Date.now();
+    const snapshot = snapshotOf(items);
+    const changed = [];
+    for (const item of items) {
+      if (lastSaved.get(item.id) !== snapshot.get(item.id)) {
+        item.updatedAt = now;
+        delete tombstones[item.id]; // an undo brings a deleted entry back
+        changed.push(item.id);
+      }
+    }
+    for (const id of lastSaved.keys()) {
+      if (!snapshot.has(id)) {
+        tombstones[id] = now;
+        changed.push(id);
+      }
+    }
+    lastSaved = snapshot;
+    persist();
+    if (changed.length) syncListeners.forEach((fn) => fn(changed));
+  }
+
+  // Sync hands over a merged list; it is already stamped, so nothing is re-sent.
+  function applyRemote(nextItems, nextTombstones) {
+    items = nextItems;
+    tombstones = nextTombstones;
+    lastSaved = snapshotOf(items);
+    persist();
+    render();
+    if (editingId && !items.some((i) => i.id === editingId)) closeOverlay(editor);
   }
 
   function seedPresets() {
@@ -430,7 +482,8 @@
 
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
-    if (editor.classList.contains("open")) closeOverlay(editor);
+    if (pwSheet.classList.contains("open")) finishPassword("cancel");
+    else if (editor.classList.contains("open")) closeOverlay(editor);
     else if (menu.classList.contains("open")) closeOverlay(menu);
   });
 
@@ -635,7 +688,12 @@
     showToast(t("restored", restored.length));
   }
 
-  $("#menuBtn").addEventListener("click", () => openOverlay(menu));
+  $("#menuBtn").addEventListener("click", () => {
+    openOverlay(menu);
+    // Fetch the sync code early: the Google sign-in popup must open right
+    // after the tap, or browsers (Safari especially) block it.
+    if (!syncEnabled()) import("./sync.js").catch(() => {});
+  });
   $("#menuClose").addEventListener("click", () => closeOverlay(menu));
   $("#exportBtn").addEventListener("click", exportBackup);
   $("#importBtn").addEventListener("click", () => importInput.click());
@@ -728,6 +786,172 @@
   });
 
   // ---------------------------------------------------------------------------
+  // Sync (optional). js/sync.js holds the Firebase and encryption logic and is
+  // only loaded once the user turns sync on; this part owns its UI.
+  // ---------------------------------------------------------------------------
+  const syncListeners = [];
+  const syncText = $("#syncText");
+  const syncStatus = $("#syncStatus");
+  const syncPrimary = $("#syncPrimary");
+  const syncSecondary = $("#syncSecondary");
+  let syncView = { state: "off" };
+  let syncPromise = null;
+
+  const syncEnabled = () => { try { return localStorage.getItem(SYNC_KEY) === "1"; } catch (_) { return false; } };
+  function setSyncEnabled(on) {
+    try { on ? localStorage.setItem(SYNC_KEY, "1") : localStorage.removeItem(SYNC_KEY); } catch (_) {}
+  }
+
+  // The narrow surface js/sync.js works through.
+  const store = {
+    getItems: () => items,
+    getTombstones: () => tombstones,
+    applyRemote,
+    normalize: (x) => normalizeItem(x, true),
+    onLocalChange: (fn) => syncListeners.push(fn),
+    setSyncView,
+    setSyncEnabled,
+    syncEnabled,
+    askPassword,
+    toast: (key) => showToast(t(key)),
+    confirm: (key) => confirm(t(key)),
+  };
+
+  function loadSync() {
+    if (!syncPromise) {
+      syncPromise = import("./sync.js")
+        .then((m) => m.start(store))
+        .catch((err) => {
+          syncPromise = null;
+          console.error(err);
+          setSyncView({ state: "error", message: "syncLoadFailed" });
+          throw err;
+        });
+    }
+    return syncPromise;
+  }
+
+  // view: { state: "off" | "connecting" | "locked" | "on" | "error",
+  //         email?, status?: "synced" | "pending" | "offline", message? }
+  function setSyncView(view) {
+    syncView = view;
+    renderSync();
+  }
+
+  function setButton(btn, key, action) {
+    btn.hidden = !key;
+    if (!key) return;
+    btn.textContent = t(key);
+    btn.onclick = action;
+  }
+
+  function renderSync() {
+    const v = syncView;
+    const run = (method) => () => loadSync().then((c) => c[method]()).catch(() => {});
+    syncStatus.hidden = true;
+    setButton(syncPrimary, null);
+    setButton(syncSecondary, null);
+
+    if (v.state === "off") {
+      syncText.textContent = t("syncOffText");
+      setButton(syncPrimary, "syncSignIn", run("signIn"));
+    } else if (v.state === "connecting") {
+      syncText.textContent = t("syncConnecting");
+    } else if (v.state === "locked") {
+      syncText.textContent = t("syncLockedText", v.email);
+      setButton(syncPrimary, "syncUnlock", run("unlock"));
+      setButton(syncSecondary, "syncSignOut", run("signOut"));
+    } else if (v.state === "on") {
+      syncText.textContent = t("syncOnText", v.email);
+      syncStatus.hidden = false;
+      syncStatus.textContent = t(v.status === "offline" ? "syncOffline" : v.status === "pending" ? "syncPending" : "syncSynced");
+      setButton(syncSecondary, "syncSignOut", run("signOut"));
+    } else {
+      syncText.textContent = t(v.message || "syncError");
+      setButton(syncPrimary, "syncRetry", run("retry"));
+      if (v.email) setButton(syncSecondary, "syncSignOut", run("signOut"));
+    }
+  }
+
+  // Password sheet. askPassword({ mode: "create" | "unlock", email, submit(pw) })
+  // resolves to "ok", "cancel" or "forgot". submit returns false for a wrong
+  // password and throws on other errors.
+  const pwSheet = $("#pwSheet");
+  const pwForm = $("#pwForm");
+  const pwInput = $("#pwInput");
+  const pwConfirm = $("#pwConfirm");
+  const pwConfirmWrap = $("#pwConfirmWrap");
+  const pwError = $("#pwError");
+  const pwSubmit = $("#pwSubmit");
+  const pwForgot = $("#pwForgot");
+  let pwRequest = null;
+
+  function askPassword({ mode, email, submit }) {
+    return new Promise((resolve) => {
+      pwRequest = { mode, submit, resolve };
+      $("#pwUser").value = email || "";
+      const create = mode === "create";
+      $("#pwTitle").textContent = t(create ? "pwCreateTitle" : "pwUnlockTitle");
+      $("#pwText").textContent = t(create ? "pwCreateText" : "pwUnlockText");
+      pwConfirmWrap.hidden = !create;
+      pwForgot.hidden = create;
+      pwInput.autocomplete = create ? "new-password" : "current-password";
+      pwInput.value = "";
+      pwConfirm.value = "";
+      pwError.textContent = "";
+      setPwBusy(false);
+      openOverlay(pwSheet);
+      setTimeout(() => pwInput.focus(), 50);
+    });
+  }
+
+  function setPwBusy(busy) {
+    pwSubmit.disabled = busy;
+    pwSubmit.textContent = t(busy ? "pwWorking" : "pwSubmit");
+    pwInput.disabled = busy;
+    pwConfirm.disabled = busy;
+  }
+
+  function finishPassword(result) {
+    if (!pwRequest) return;
+    const { resolve } = pwRequest;
+    pwRequest = null;
+    pwInput.value = "";
+    pwConfirm.value = "";
+    closeOverlay(pwSheet);
+    resolve(result);
+  }
+
+  pwForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!pwRequest || pwSubmit.disabled) return;
+    const pw = pwInput.value;
+    if (pw.length < 8) { pwError.textContent = t("pwTooShort"); return; }
+    if (pwRequest.mode === "create" && pw !== pwConfirm.value) { pwError.textContent = t("pwMismatch"); return; }
+    pwError.textContent = "";
+    setPwBusy(true);
+    try {
+      if (await pwRequest.submit(pw)) { finishPassword("ok"); return; }
+      pwError.textContent = t("pwWrong");
+    } catch (err) {
+      console.error(err);
+      pwError.textContent = t("syncError");
+    }
+    setPwBusy(false);
+    pwInput.select();
+  });
+  $("#pwCancel").addEventListener("click", () => finishPassword("cancel"));
+  pwForgot.addEventListener("click", () => finishPassword("forgot"));
+  {
+    let downOnBackdrop = false;
+    pwSheet.addEventListener("pointerdown", (e) => { downOnBackdrop = e.target === pwSheet; });
+    pwSheet.addEventListener("click", (e) => {
+      if (e.target === pwSheet && downOnBackdrop && !pwSubmit.disabled) finishPassword("cancel");
+      downOnBackdrop = false;
+    });
+  }
+
+  // ---------------------------------------------------------------------------
   // Language switch
   // ---------------------------------------------------------------------------
   const langSwitch = $("#langSwitch");
@@ -775,6 +999,7 @@
     buildPresetChips();
     render();
     updateBanner();
+    renderSync();
   }
 
   // ---------------------------------------------------------------------------
@@ -782,6 +1007,8 @@
   // ---------------------------------------------------------------------------
   const stored = load();
   items = stored || seedPresets();
+  tombstones = loadTombstones();
+  if (stored) lastSaved = snapshotOf(items);
   save(); // writes seeds on first launch and upgrades older records in place
 
   applyStaticText();
@@ -791,6 +1018,12 @@
   render();
   updateBanner();
   requestPersistence();
+  if (syncEnabled()) {
+    setSyncView({ state: "connecting" });
+    loadSync().catch(() => {});
+  } else {
+    renderSync();
+  }
 
   // Offline support. Service workers need HTTPS (or localhost).
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {

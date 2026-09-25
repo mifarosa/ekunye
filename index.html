@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://*.googleapis.com https://www.gstatic.com https://ekunye-d7c7f.firebaseapp.com; frame-src https://ekunye-d7c7f.firebaseapp.com https://accounts.google.com https://apis.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>E-Künye</title>
 <meta name="description" content="Kişisel bilgilerini tek dokunuşla kopyala.">
 <meta name="theme-color" content="#FFFFFF">
@@ -108,6 +109,15 @@
       <h2 id="menuTitle" data-i18n="settings">Ayarlar</h2>
       <span class="field-label" data-i18n="language">Dil</span>
       <div id="langSwitch" class="segmented" role="radiogroup" aria-label="Dil" data-i18n-aria="language"></div>
+      <span class="field-label" data-i18n="sync">Eşitleme</span>
+      <div class="sync-card">
+        <p id="syncText" class="sync-text"></p>
+        <p id="syncStatus" class="sync-status" hidden></p>
+        <div class="sync-actions">
+          <button id="syncPrimary" class="btn primary" hidden></button>
+          <button id="syncSecondary" class="btn quiet" hidden></button>
+        </div>
+      </div>
       <span class="field-label" data-i18n="backup">Yedekleme</span>
       <p class="menu-text" data-i18n="privacyNote">Bilgilerin yalnızca bu cihazda saklanır, hiçbir sunucuya gönderilmez. Telefon değiştirmeden ya da tarayıcı verilerini silmeden önce yedek al.</p>
       <button id="exportBtn" class="menu-item">
@@ -154,6 +164,29 @@
         <span class="spacer"></span>
       </div>
     </div>
+  </div>
+
+  <!-- Sync password sheet -->
+  <div id="pwSheet" class="overlay" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
+    <form id="pwForm" class="sheet" novalidate>
+      <h2 id="pwTitle"></h2>
+      <p id="pwText" class="menu-text"></p>
+      <!-- Lets password managers file the sync password under the account. -->
+      <input id="pwUser" type="email" autocomplete="username" hidden>
+      <label class="field-label" for="pwInput" data-i18n="pwLabel">Parola</label>
+      <input id="pwInput" class="input" type="password" autocomplete="current-password">
+      <div id="pwConfirmWrap">
+        <label class="field-label" for="pwConfirm" data-i18n="pwConfirmLabel">Parolayı tekrar yaz</label>
+        <input id="pwConfirm" class="input" type="password" autocomplete="new-password">
+      </div>
+      <p id="pwError" class="pw-error" role="alert"></p>
+      <div class="sheet-actions">
+        <button id="pwForgot" type="button" class="btn quiet" data-i18n="pwForgot">Parolamı unuttum</button>
+        <span class="spacer"></span>
+        <button id="pwCancel" type="button" class="btn quiet" data-i18n="cancel">Vazgeç</button>
+        <button id="pwSubmit" type="submit" class="btn primary" data-i18n="pwSubmit">Devam</button>
+      </div>
+    </form>
   </div>
 
 <script src="lang/tr.js"></script>

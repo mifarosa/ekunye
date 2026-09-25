@@ -273,6 +273,18 @@ textarea.input { min-height: 96px; resize: vertical; line-height: 1.45; }
 .menu-item span { display: block; margin-top: 3px; font-size: 13px; color: var(--muted); }
 .menu-text + .menu-item { margin-top: 14px; }
 
+/* Sync */
+.sync-card { padding: 16px; border-radius: 18px; background: var(--faint); }
+.sync-text { margin: 0; font-size: 14px; line-height: 1.5; }
+.sync-status { margin: 6px 0 0; font-size: 13px; color: var(--accent); }
+.sync-status[hidden] { display: none; }
+.sync-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.sync-actions:not(:has(button:not([hidden]))) { display: none; }
+.sync-actions .btn.primary { flex: 1; }
+.sync-actions .btn.quiet { padding-left: 4px; padding-right: 4px; }
+.pw-error { min-height: 1.4em; margin: 10px 0 0; font-size: 13px; color: var(--danger); }
+#pwConfirmWrap[hidden] { display: none; }
+
 /* About */
 .about-card { margin-top: 10px; padding: 16px; border-radius: 18px; background: var(--faint); }
 .about-card h3 { margin: 0; font-size: 15px; font-weight: 600; }
