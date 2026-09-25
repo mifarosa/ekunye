@@ -30,7 +30,7 @@
         { id: "email", emoji: "✉️", seed: true },
         { id: "phone", emoji: "📱", seed: true },
         { id: "iban", emoji: "🏦", seed: true, hint: "iban", hidden: true },
-        { id: "tcId", emoji: "🪪", hint: "tcId", numeric: true, hidden: true },
+        { id: "tcId", emoji: "🪪", hint: "tcId", hidden: true },
       ],
     },
     {
@@ -38,10 +38,10 @@
       items: [
         { id: "motherPhone", emoji: "👩", seed: true },
         { id: "motherIban", emoji: "🏦", hint: "iban", hidden: true },
-        { id: "motherTcId", emoji: "🪪", hint: "tcId", numeric: true, hidden: true },
+        { id: "motherTcId", emoji: "🪪", hint: "tcId", hidden: true },
         { id: "fatherPhone", emoji: "👨", seed: true },
         { id: "fatherIban", emoji: "🏦", hint: "iban", hidden: true },
-        { id: "fatherTcId", emoji: "🪪", hint: "tcId", numeric: true, hidden: true },
+        { id: "fatherTcId", emoji: "🪪", hint: "tcId", hidden: true },
       ],
     },
     {
@@ -49,7 +49,7 @@
       items: [
         { id: "spousePhone", emoji: "💑" },
         { id: "spouseIban", emoji: "🏦", hint: "iban", hidden: true },
-        { id: "spouseTcId", emoji: "🪪", hint: "tcId", numeric: true, hidden: true },
+        { id: "spouseTcId", emoji: "🪪", hint: "tcId", hidden: true },
       ],
     },
     {
@@ -68,11 +68,11 @@
     {
       id: "home",
       items: [
-        { id: "electricity", emoji: "⚡", numeric: true },
-        { id: "water", emoji: "💧", numeric: true },
-        { id: "gas", emoji: "🔥", numeric: true },
+        { id: "electricity", emoji: "⚡" },
+        { id: "water", emoji: "💧" },
+        { id: "gas", emoji: "🔥" },
         { id: "internet", emoji: "🌐" },
-        { id: "postcode", emoji: "📮", hint: "postcode", numeric: true },
+        { id: "postcode", emoji: "📮", hint: "postcode" },
         { id: "wifi", emoji: "📶", hidden: true },
         { id: "doorCode", emoji: "🔢", hidden: true },
       ],
@@ -84,7 +84,7 @@
         { id: "registration", emoji: "📄", hidden: true },
         { id: "trafficInsurance", emoji: "🛡️", hidden: true },
         { id: "carInsurance", emoji: "🛡️", hidden: true },
-        { id: "hgs", emoji: "🛣️", numeric: true },
+        { id: "hgs", emoji: "🛣️" },
       ],
     },
     {
@@ -101,6 +101,21 @@
     },
   ];
   const PRESETS = PRESET_GROUPS.flatMap((g) => g.items);
+
+  // Field type per starter entry (see js/fields.js); anything unlisted is text.
+  const PRESET_TYPES = {
+    homeAddress: "longText", workAddress: "longText", email: "email", phone: "phone", iban: "iban", tcId: "tcId",
+    motherPhone: "phone", motherIban: "iban", motherTcId: "tcId",
+    fatherPhone: "phone", fatherIban: "iban", fatherTcId: "tcId",
+    spousePhone: "phone", spouseIban: "iban", spouseTcId: "tcId",
+    myBirthday: "date", spouseBirthday: "date", motherBirthday: "date", fatherBirthday: "date",
+    firstDate: "date", proposal: "date", engagement: "date", wedding: "date",
+    electricity: "number", water: "number", gas: "number", postcode: "number", hgs: "number",
+    bloodType: "blood", medications: "longText", allergies: "longText", conditions: "longText",
+    doctorPhone: "phone", emergencyContact: "longText",
+  };
+  PRESETS.forEach((p) => { p.type = PRESET_TYPES[p.id] || "text"; });
+  const FIELDS = window.EKUNYE_FIELDS;
 
   // ---------------------------------------------------------------------------
   // Language
@@ -184,7 +199,9 @@
       ? crypto.randomUUID()
       : Date.now().toString(36) + Math.random().toString(36).slice(2);
 
-  // Current record shape: { id, emoji, title, value, hidden, updatedAt }.
+  // Current record shape: { id, emoji, title, value, hidden, type, updatedAt }.
+  // Records saved before types existed take the type of the starter field
+  // their title matches, or plain text.
   // Every record from storage or a backup file goes through this function, so
   // older data (missing fields, extra fields, wrong types) always loads safely.
   // Rule for future versions: only add fields with defaults here; never rename
@@ -199,6 +216,7 @@
       title,
       value: typeof x.value === "string" ? x.value : "",
       hidden: x.hidden === true,
+      type: FIELDS.TYPES.includes(x.type) ? x.type : (findPreset(title) || { type: "text" }).type,
       updatedAt: Number.isFinite(x.updatedAt) ? x.updatedAt : 0,
     };
   }
@@ -237,7 +255,7 @@
   }
 
   // What sync compares: the visible fields plus the position in the list.
-  const contentKey = (item, pos) => JSON.stringify([item.emoji, item.title, item.value, item.hidden, pos]);
+  const contentKey = (item, pos) => JSON.stringify([item.emoji, item.title, item.value, item.hidden, item.type, pos]);
   const snapshotOf = (list) => new Map(list.map((item, pos) => [item.id, contentKey(item, pos)]));
 
   function persist() {
@@ -284,7 +302,7 @@
   }
 
   function seedPresets() {
-    return PRESETS.filter((p) => p.seed).map((p) => ({ id: uid(), emoji: p.emoji, title: presetTitle(p), value: "", hidden: !!p.hidden }));
+    return PRESETS.filter((p) => p.seed).map((p) => ({ id: uid(), emoji: p.emoji, title: presetTitle(p), value: "", hidden: !!p.hidden, type: p.type }));
   }
 
   // Ask the browser not to evict our data under storage pressure (Chromium).
@@ -515,10 +533,67 @@
     for (const b of emojiGrid.children) b.classList.toggle("selected", b.textContent === current);
   }
 
-  function applyPresetHints(preset) {
-    valueInput.placeholder = (preset && presetHint(preset)) || t("valuePlaceholder");
-    valueInput.inputMode = preset && preset.numeric ? "numeric" : "text";
+  // ---------------------------------------------------------------------------
+  // Field types in the editor
+  // ---------------------------------------------------------------------------
+  const typeChips = $("#typeChips");
+  const bloodChips = $("#bloodChips");
+  const valueWarn = $("#valueWarn");
+  let editType = "text";
+  let editPreset = null; // starter field being filled in, for its hint
+
+  function buildTypeChips() {
+    typeChips.replaceChildren();
+    for (const type of FIELDS.TYPES) {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip";
+      chip.dataset.type = type;
+      chip.setAttribute("role", "radio");
+      chip.textContent = LANGS[lang].types[type];
+      chip.addEventListener("click", () => setEditType(type));
+      typeChips.appendChild(chip);
+    }
+    bloodChips.replaceChildren();
+    for (const group of FIELDS.BLOOD) {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip";
+      chip.textContent = group;
+      chip.addEventListener("click", () => {
+        valueInput.value = group;
+        checkValue();
+      });
+      bloodChips.appendChild(chip);
+    }
+    setEditType(editType);
   }
+
+  function setEditType(type) {
+    editType = type;
+    for (const chip of typeChips.children) chip.setAttribute("aria-checked", String(chip.dataset.type === type));
+    const cfg = FIELDS.input(type);
+    const hint = editPreset && editPreset.type === type ? presetHint(editPreset) : "";
+    valueInput.placeholder = hint || LANGS[lang].typeHints[type] || t("valuePlaceholder");
+    valueInput.inputMode = cfg.inputMode;
+    valueInput.autocapitalize = cfg.autocapitalize || "sentences";
+    valueInput.classList.toggle("single", !cfg.multiline);
+    bloodChips.hidden = type !== "blood";
+    checkValue();
+  }
+
+  function checkValue() {
+    const key = FIELDS.problem(editType, valueInput.value);
+    valueWarn.textContent = key ? t(key) : "";
+    const current = FIELDS.format("blood", valueInput.value);
+    for (const chip of bloodChips.children) chip.classList.toggle("selected", chip.textContent === current);
+  }
+
+  valueInput.addEventListener("input", () => {
+    const masked = FIELDS.mask(editType, valueInput.value);
+    if (masked !== valueInput.value) valueInput.value = masked;
+    checkValue();
+  });
 
   function buildPresetChips() {
     presetSection.replaceChildren();
@@ -548,7 +623,8 @@
           emojiInput.value = p.emoji;
           titleInput.value = presetTitle(p);
           hiddenInput.checked = !!p.hidden;
-          applyPresetHints(p);
+          editPreset = p;
+          setEditType(p.type);
           syncEmojiSelection();
           updateSaveState();
           valueInput.focus();
@@ -577,7 +653,8 @@
     titleInput.value = item ? item.title : "";
     valueInput.value = item ? item.value : "";
     hiddenInput.checked = item ? item.hidden : false;
-    applyPresetHints(item ? findPreset(item.title) : null);
+    editPreset = item ? findPreset(item.title) : null;
+    setEditType(item ? item.type : "text");
     syncEmojiSelection();
     updateSaveState();
 
@@ -600,8 +677,9 @@
       id: editingId || uid(),
       emoji: emojiInput.value.trim() || "📌",
       title,
-      value: valueInput.value.trim(),
+      value: FIELDS.format(editType, valueInput.value),
       hidden: hiddenInput.checked,
+      type: editType,
     };
     const idx = items.findIndex((i) => i.id === entry.id);
     if (idx >= 0) items[idx] = entry;
@@ -1024,6 +1102,7 @@
     applyStaticText();
     buildLangSwitch();
     buildPresetChips();
+    buildTypeChips();
     render();
     updateBanner();
     renderSync();
@@ -1042,6 +1121,7 @@
   buildLangSwitch();
   buildEmojiGrid();
   buildPresetChips();
+  buildTypeChips();
   render();
   updateBanner();
   requestPersistence();

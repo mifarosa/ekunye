@@ -16,6 +16,7 @@ Available in Turkish and English.
 
 - **Tap to copy, hold to edit.** On desktop, right-click or press <kbd>E</kbd> to edit.
 - **Ready-made fields in groups:** my details, family, spouse, special dates, home and bills, car, and health and emergency. Each field comes with a matching emoji, input hint and keyboard type.
+- **Field types:** text, long text, phone, email, number, IBAN, national ID, date and blood type. Each type opens the right keyboard and tidies the value on save (IBAN in groups of four, phone numbers, dates as DD.MM.YYYY). It also warns about likely typos, such as a wrong IBAN check digit or an invalid Turkish ID number, without blocking the save. Blood type is picked from a list.
 - **Fully editable:** rename, delete or re-emoji any field, or add your own.
 - **Hide in list:** sensitive values such as IBANs, ID numbers and Wi-Fi passwords show as dots but still copy on tap.
 - **Optional sync:** sign in with Google to see the same list on your phone and computer. Entries are encrypted on the device with a sync password before upload.
@@ -38,6 +39,7 @@ Without sync, clearing browser data or switching phones will lose the list unles
 |---|---|
 | `index.html` | Page markup; text is filled in from the language files |
 | `css/style.css` | Styles |
+| `js/fields.js` | Field types: keyboard, formatting and validation per type |
 | `js/app.js` | App logic: list, editor, backup, install hint, language switch, sync UI |
 | `js/sync.js` | Optional sync: Google sign-in and Firestore (loaded only when sync is used) |
 | `js/sync-core.js` | Encryption and the merge between local and cloud entries, with no Firebase dependency |
@@ -95,7 +97,7 @@ Entries merge one by one, and the most recent change to an entry wins.
 Each entry is stored as:
 
 ```json
-{ "id": "…", "emoji": "🏠", "title": "Ev adresi", "value": "…", "hidden": false, "updatedAt": 1727250000000 }
+{ "id": "…", "emoji": "🏠", "title": "Ev adresi", "value": "…", "hidden": false, "type": "longText", "updatedAt": 1727250000000 }
 ```
 
 Every record loaded from storage or a backup passes through `normalizeItem`, so older data keeps loading safely. When extending the format, only add fields with defaults; never rename a field or make one required.

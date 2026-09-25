@@ -198,6 +198,12 @@ h1 { margin: 0; text-align: center; font-size: 19px; font-weight: 600; letter-sp
 .emoji-row { display: flex; gap: 10px; }
 .emoji-row .emoji-input { width: 58px; flex: none; text-align: center; font-size: 24px; padding: 8px; }
 textarea.input { min-height: 96px; resize: vertical; line-height: 1.45; }
+textarea.input.single { min-height: 0; height: 50px; resize: none; }
+.type-chips .chip[aria-checked="true"] { background: var(--ink); color: #fff; }
+.blood-chips { margin-bottom: 10px; }
+.blood-chips[hidden] { display: none; }
+.blood-chips .chip.selected { background: var(--accent); color: #fff; }
+.field-warn { min-height: 1.3em; margin: 8px 2px 0; font-size: 13px; color: #A15C00; }
 
 .preset-group { border-bottom: 1px solid var(--line); }
 .preset-group summary {

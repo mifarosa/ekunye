@@ -311,7 +311,7 @@ export function start(store) {
       const pos = items.findIndex((i) => i.id === id);
       if (pos >= 0) {
         const it = items[pos];
-        const box = await encryptJSON(key.key, { emoji: it.emoji, title: it.title, value: it.value, hidden: it.hidden, pos }, `${uid}/${id}`);
+        const box = await encryptJSON(key.key, { emoji: it.emoji, title: it.title, value: it.value, hidden: it.hidden, type: it.type, pos }, `${uid}/${id}`);
         writes.push([id, { ...box, updatedAt: it.updatedAt, deleted: false }]);
       } else if (tombstones[id]) {
         writes.push([id, { iv: "", ct: "", updatedAt: tombstones[id], deleted: true }]);

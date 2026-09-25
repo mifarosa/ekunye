@@ -82,8 +82,13 @@
       <span class="field-label" data-i18n="emojiPick">Emoji seç ya da klavyeden yaz</span>
       <div id="emojiGrid" class="emoji-grid"></div>
 
+      <span class="field-label" data-i18n="fieldType">Alan türü</span>
+      <div id="typeChips" class="chips type-chips" role="radiogroup" aria-label="Alan türü" data-i18n-aria="fieldType"></div>
+
       <label class="field-label" for="valueInput" data-i18n="valueLabel">Kopyalanacak bilgi</label>
+      <div id="bloodChips" class="chips blood-chips" hidden></div>
       <textarea id="valueInput" class="input" placeholder="Buraya yaz" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
+      <p id="valueWarn" class="field-warn" aria-live="polite"></p>
 
       <label class="toggle">
         <span class="toggle-text">
@@ -195,6 +200,7 @@
 
 <script src="lang/tr.js"></script>
 <script src="lang/en.js"></script>
+<script src="js/fields.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
