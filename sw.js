@@ -1,5 +1,5 @@
 // Bump this version whenever any cached file changes, so clients pick up the update.
-const CACHE = "e-kunye-v11";
+const CACHE = "e-kunye-v12";
 const FONT_CACHE = "e-kunye-fonts";
 const LIB_CACHE = "e-kunye-libs"; // Firebase SDK, fetched only once sync is turned on
 

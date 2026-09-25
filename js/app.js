@@ -694,6 +694,26 @@
     showToast(t("restored", restored.length));
   }
 
+  // Reset: every entry goes, the starter fields come back empty. Deletions
+  // reach other devices through sync like any other delete.
+  function resetList() {
+    if (!confirm(t(syncEnabled() ? "resetConfirmSync" : "resetConfirm"))) return;
+    const previous = items;
+    items = seedPresets();
+    save();
+    render();
+    closeOverlay(menu);
+    showToast(t("resetDone"), {
+      label: t("undo"),
+      fn: () => {
+        items = previous;
+        save();
+        render();
+      },
+    });
+  }
+
+  $("#resetBtn").addEventListener("click", resetList);
   $("#menuBtn").addEventListener("click", () => {
     openOverlay(menu);
     // Load and start sync early: the Google sign-in popup must open right

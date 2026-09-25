@@ -272,6 +272,7 @@ textarea.input { min-height: 96px; resize: vertical; line-height: 1.45; }
 .menu-item strong { display: block; font-size: 15px; font-weight: 600; }
 .menu-item span { display: block; margin-top: 3px; font-size: 13px; color: var(--muted); }
 .menu-text + .menu-item { margin-top: 14px; }
+.menu-item.danger strong { color: var(--danger); }
 
 /* Sync */
 .sync-card { padding: 16px; border-radius: 18px; background: var(--faint); }

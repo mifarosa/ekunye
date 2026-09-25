@@ -31,7 +31,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
       </button>
     </header>
-    <p class="hint" data-i18n="tapHint">Kopyalamak için dokun, düzenlemek için basılı tut.</p>
+    <p class="hint" data-i18n="tapHint">Kopyalamak için dokun, düzenlemek veya silmek için basılı tut.</p>
 
     <div id="banner" class="banner" hidden>
       <div class="banner-head">
@@ -130,6 +130,10 @@
       </button>
       <input id="importInput" type="file" accept="application/json,.json" hidden>
       <p class="menu-text" data-i18n="backupNote">Yedek dosyası şifrelenmez, güvendiğin bir yerde sakla.</p>
+      <button id="resetBtn" class="menu-item danger">
+        <strong data-i18n="resetTitle">Listeyi sıfırla</strong>
+        <span data-i18n="resetDesc">Tüm bilgilerin silinir, başlangıç alanları geri gelir</span>
+      </button>
 
       <span class="field-label" data-i18n="about">Hakkında</span>
       <section class="about-card">
