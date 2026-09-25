@@ -36,11 +36,15 @@
       <div class="banner-head">
         <span class="banner-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0-12 4 4m-4-4L8 7"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg></span>
         <div>
-          <h2 class="banner-title" data-i18n="installTitle">E-Künye’yi ana ekranına ekle</h2>
+          <h2 id="bannerTitle" class="banner-title">E-Künye’yi ana ekranına ekle</h2>
           <p id="bannerText" class="banner-copy"></p>
         </div>
       </div>
       <ol id="installSteps" class="install-steps"></ol>
+      <div id="bannerQr" class="banner-qr" hidden>
+        <img src="icons/qr.svg" width="112" height="112" alt="QR: ekunye.mifarosa.com">
+        <p><span data-i18n="qrCaption"></span><br><strong>ekunye.mifarosa.com</strong></p>
+      </div>
       <button id="bannerInstall" class="install" data-i18n="installButton" hidden>Uygulamayı yükle</button>
       <button id="bannerClose" class="close" aria-label="Kapat" data-i18n-aria="close">×</button>
     </div>
@@ -116,6 +120,34 @@
       </button>
       <input id="importInput" type="file" accept="application/json,.json" hidden>
       <p class="menu-text" data-i18n="backupNote">Yedek dosyası şifrelenmez, güvendiğin bir yerde sakla.</p>
+
+      <span class="field-label" data-i18n="about">Hakkında</span>
+      <section class="about-card">
+        <h3><span aria-hidden="true">📱</span> <span data-i18n="aboutPhoneTitle"></span></h3>
+        <p data-i18n="aboutPhoneText"></p>
+      </section>
+      <section class="about-card">
+        <h3><span aria-hidden="true">🏠</span> <span data-i18n="aboutInstallTitle"></span></h3>
+        <p data-i18n="aboutInstallText"></p>
+        <ul class="about-list" data-i18n-html="aboutInstallSteps"></ul>
+        <button id="aboutInstall" class="about-install" data-i18n="installButton" hidden>Uygulamayı yükle</button>
+      </section>
+      <section class="about-card">
+        <h3><span aria-hidden="true">✨</span> <span data-i18n="aboutWhyTitle"></span></h3>
+        <p data-i18n="aboutWhyText"></p>
+      </section>
+      <section class="about-card">
+        <h3><span aria-hidden="true">👆</span> <span data-i18n="aboutHowTitle"></span></h3>
+        <ol class="install-steps" data-i18n-html="aboutHowSteps"></ol>
+      </section>
+      <section class="about-card">
+        <h3><span aria-hidden="true">👋</span> <span data-i18n="aboutDevTitle"></span></h3>
+        <p data-i18n="aboutDevText"></p>
+        <p class="about-links">
+          <a href="https://mifarosa.com" target="_blank" rel="noopener">mifarosa.com</a>
+          <a href="https://github.com/mifarosa/ekunye" target="_blank" rel="noopener" data-i18n="aboutSource"></a>
+        </p>
+      </section>
       <div class="sheet-actions">
         <span class="spacer"></span>
         <button id="menuClose" class="btn quiet" data-i18n="close">Kapat</button>

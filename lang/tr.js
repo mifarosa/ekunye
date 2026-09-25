@@ -11,6 +11,9 @@
 
     installTitle: "E-Künye’yi ana ekranına ekle",
     installButton: "Uygulamayı yükle",
+    desktopTitle: "E-Künye’yi telefonunda aç",
+    desktopCopy: "E-Künye telefonda kullanılmak için tasarlandı; form doldururken hep yanında olur.",
+    qrCaption: "Telefonunun kamerasıyla okut, açılan sayfada ana ekrana ekle. Ya da şu adrese git:",
     installCopy: "Uygulama gibi açılır, bilgilerin kalıcı olur ve internetsiz de çalışır.",
     installCopyPrompt: "Tek dokunuşla açılır, bilgilerin kalıcı olur ve internetsiz de çalışır.",
     stepsIOS: "<li>Safari’nin altındaki <strong>Paylaş</strong> simgesine dokun.</li><li>Menüden <strong>Ana Ekrana Ekle</strong> seçeneğini seç.</li><li>Sağ üstteki <strong>Ekle</strong> düğmesine dokun.</li>",
@@ -58,6 +61,20 @@
     noEntries: "Bu dosyada bilgi bulunamadı",
     confirmRestore: (n) => `Şu anki listen, yedekteki ${n} bilgiyle değiştirilecek. Devam edilsin mi?`,
     restored: (n) => `${n} bilgi geri yüklendi`,
+
+    about: "Hakkında",
+    aboutPhoneTitle: "Telefonda kullanmanı öneririz",
+    aboutPhoneText: "E-Künye, form doldururken elinin altında olsun diye telefon için tasarlandı. Ana ekrana eklersen uygulama gibi açılır, internetsiz çalışır ve bilgilerin daha güvenle saklanır.",
+    aboutInstallTitle: "Ana ekrana ekleyebilirsin",
+    aboutInstallText: "E-Künye’yi mağazadan indirmeden, bir uygulama gibi telefonunun ana ekranına ekleyebilirsin. Böylece tek dokunuşla açılır, internetsiz çalışır ve bilgilerin kalıcı olur.",
+    aboutInstallSteps: "<li><strong>iPhone:</strong> Safari’de alttaki <strong>Paylaş</strong> simgesine dokun, <strong>Ana Ekrana Ekle</strong>’yi seç.</li><li><strong>Android:</strong> Chrome’da sağ üstteki <strong>menüye</strong> dokun, <strong>Ana ekrana ekle</strong> ya da <strong>Uygulamayı yükle</strong>’yi seç.</li>",
+    aboutWhyTitle: "Neden E-Künye?",
+    aboutWhyText: "Adres, IBAN, TC kimlik numarası, plaka, abone numarası gibi bilgileri her seferinde aramak ya da elle yazmak zorunda kalmazsın. Hepsi tek listede durur, bir dokunuşla kopyalanır. Bilgilerin hiçbir sunucuya gitmez, yalnızca senin cihazında kalır.",
+    aboutHowTitle: "Nasıl kullanılır?",
+    aboutHowSteps: "<li>E-Künye’yi telefonunda <strong>ana ekrana ekle</strong>.</li><li>Listedeki boş satırlara dokunup bilgilerini gir, yenileri için sağ üstteki <strong>+</strong> düğmesini kullan.</li><li>Bir formda ihtiyaç olunca uygulamayı aç, satıra <strong>dokun</strong>, bilgi kopyalanır; sonra yapıştır.</li><li>Değiştirmek için satırı <strong>basılı tut</strong>. Hassas bilgileri <strong>Listede gizle</strong> ile noktalara çevirebilirsin.</li><li>Telefon değiştirmeden önce buradan <strong>yedek al</strong>.</li>",
+    aboutDevTitle: "Geliştiren",
+    aboutDevText: "E-Künye, Mehmet Faruk Gul tarafından geliştirildi. Ücretsizdir; reklam ve üyelik yoktur.",
+    aboutSource: "Kaynak kod",
   },
 
   hints: {

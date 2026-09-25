@@ -1,5 +1,5 @@
 // Bump this version whenever any cached file changes, so clients pick up the update.
-const CACHE = "e-kunye-v6";
+const CACHE = "e-kunye-v7";
 const FONT_CACHE = "e-kunye-fonts";
 
 const ASSETS = [
@@ -13,6 +13,7 @@ const ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
+  "./icons/qr.svg",
 ];
 
 self.addEventListener("install", (event) => {

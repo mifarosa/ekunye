@@ -649,9 +649,12 @@
   // "Add to home screen" hint (installed apps keep their storage reliably)
   // ---------------------------------------------------------------------------
   const banner = $("#banner");
+  const bannerTitle = $("#bannerTitle");
   const bannerText = $("#bannerText");
+  const bannerQr = $("#bannerQr");
   const installSteps = $("#installSteps");
   const bannerInstall = $("#bannerInstall");
+  const aboutInstall = $("#aboutInstall");
   let deferredPrompt = null;
 
   function isStandalone() {
@@ -668,7 +671,19 @@
     try { dismissed = localStorage.getItem(BANNER_KEY) === "1"; } catch (_) {}
     const touch = window.matchMedia("(pointer: coarse)").matches;
 
-    if (isStandalone() || !touch || dismissed) { banner.hidden = true; return; }
+    if (isStandalone() || dismissed) { banner.hidden = true; return; }
+
+    // On a computer, point people to their phone instead of install steps.
+    const desktop = !touch;
+    bannerTitle.textContent = desktop ? t("desktopTitle") : t("installTitle");
+    bannerQr.hidden = !desktop;
+    installSteps.hidden = desktop;
+    if (desktop) {
+      bannerText.textContent = t("desktopCopy");
+      bannerInstall.hidden = true;
+      banner.hidden = false;
+      return;
+    }
 
     if (isIOS()) {
       bannerText.textContent = t("installCopy");
@@ -689,19 +704,24 @@
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredPrompt = e;
+    aboutInstall.hidden = isStandalone();
     updateBanner();
   });
   window.addEventListener("appinstalled", () => {
     deferredPrompt = null;
     banner.hidden = true;
+    aboutInstall.hidden = true;
   });
-  bannerInstall.addEventListener("click", async () => {
+  async function promptInstall() {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     try { await deferredPrompt.userChoice; } catch (_) {}
     deferredPrompt = null;
+    aboutInstall.hidden = true;
     updateBanner();
-  });
+  }
+  bannerInstall.addEventListener("click", promptInstall);
+  aboutInstall.addEventListener("click", promptInstall);
   $("#bannerClose").addEventListener("click", () => {
     try { localStorage.setItem(BANNER_KEY, "1"); } catch (_) {}
     banner.hidden = true;

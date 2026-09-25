@@ -11,6 +11,9 @@
 
     installTitle: "Add E-Künye to your home screen",
     installButton: "Install app",
+    desktopTitle: "Open E-Künye on your phone",
+    desktopCopy: "E-Künye is designed for your phone, so it’s with you whenever you fill in a form.",
+    qrCaption: "Scan with your phone’s camera, then add it to your home screen. Or go to:",
     installCopy: "Opens like an app, keeps your data safe and works offline.",
     installCopyPrompt: "Opens with one tap, keeps your data safe and works offline.",
     stepsIOS: "<li>Tap the <strong>Share</strong> icon at the bottom of Safari.</li><li>Choose <strong>Add to Home Screen</strong>.</li><li>Tap <strong>Add</strong> at the top right.</li>",
@@ -58,6 +61,20 @@
     noEntries: "No entries found in this file",
     confirmRestore: (n) => `Your current list will be replaced with ${n} ${n === 1 ? "entry" : "entries"} from the backup. Continue?`,
     restored: (n) => `${n} ${n === 1 ? "entry" : "entries"} restored`,
+
+    about: "About",
+    aboutPhoneTitle: "Best used on your phone",
+    aboutPhoneText: "E-Künye is designed for your phone, so it’s at hand whenever you fill in a form. Add it to your home screen and it opens like an app, works offline and keeps your data more reliably.",
+    aboutInstallTitle: "Add it to your home screen",
+    aboutInstallText: "You can add E-Künye to your phone’s home screen like an app, without an app store. It then opens with one tap, works offline and keeps your data reliably.",
+    aboutInstallSteps: "<li><strong>iPhone:</strong> in Safari, tap <strong>Share</strong> at the bottom and choose <strong>Add to Home Screen</strong>.</li><li><strong>Android:</strong> in Chrome, tap the <strong>menu</strong> at the top right and choose <strong>Add to Home screen</strong> or <strong>Install app</strong>.</li>",
+    aboutWhyTitle: "Why E-Künye?",
+    aboutWhyText: "No more digging up or typing your address, IBAN, ID number, license plate or account numbers every time. They sit in one list and copy with a single tap. Nothing is sent to a server; your data stays on your device.",
+    aboutHowTitle: "How to use it",
+    aboutHowSteps: "<li><strong>Add</strong> E-Künye <strong>to your home screen</strong>.</li><li>Tap the empty lines to fill in your details, or use <strong>+</strong> at the top right to add more.</li><li>When a form asks, open the app and <strong>tap</strong> a line to copy it, then paste.</li><li><strong>Hold</strong> a line to edit it. Turn on <strong>Hide in list</strong> to show sensitive details as dots.</li><li><strong>Back up</strong> from here before switching phones.</li>",
+    aboutDevTitle: "Made by",
+    aboutDevText: "E-Künye is made by Mehmet Faruk Gul. It’s free, with no ads and no sign-up.",
+    aboutSource: "Source code",
   },
 
   hints: {

@@ -21,6 +21,7 @@ Available in Turkish and English.
 - **Backup and restore:** export the whole list as a JSON file (through the share sheet where the browser supports it) and restore it on any device.
 - **Turkish and English:** picks the browser language on first launch and can be switched under Settings. Built-in field names follow the language; fields you renamed stay as they are.
 - **Installable and offline:** add it to the home screen on Android or iOS. It works without a connection after the first visit.
+- **Phone first:** opened on a computer, it shows a QR code to continue on your phone. Settings has an About section with home screen steps, why and how to use it, and who made it.
 
 ## Privacy
 
@@ -38,7 +39,7 @@ This means clearing browser data or switching phones will lose the list unless y
 | `lang/tr.js`, `lang/en.js` | All interface text, preset field names and hints, one file per language |
 | `manifest.webmanifest` | PWA manifest (name, colors, icons) |
 | `sw.js` | Service worker: caches the app shell and Google Fonts for offline use |
-| `icons/` | App icons (192, 512 and maskable, plus the Apple touch icon) |
+| `icons/` | App icons (192, 512 and maskable, plus the Apple touch icon) and the QR code shown on desktop |
 
 There are no dependencies and no build step.
 
