@@ -71,9 +71,11 @@ export async function verifyCheck(key, check, uid) {
 //   local:      [{ id, emoji, title, value, hidden, updatedAt }] in list order
 //   tombstones: { id: deletedAt }
 //   remote:     Map id -> { updatedAt, deleted, data?: { emoji, title, value, hidden, pos } }
-//   firstLink:  true the first time this device joins this account; untouched
-//               empty starter entries that the account already has are dropped
-//               instead of being uploaded as duplicates.
+//   firstLink:  true the first time this device joins this account. If the
+//               account already holds entries (live or deleted), the account's
+//               list wins: this device's empty starter entries are dropped
+//               instead of being uploaded, even for fields the account deleted
+//               or renamed. Empty custom entries are kept.
 //   keyOf:      title -> language-independent preset id (or null), so
 //               "Ev adresi" and "Home address" count as the same field.
 //   now:        timestamp for deletions made while removing duplicates.
@@ -85,11 +87,11 @@ export function reconcile({ local, tombstones, remote, firstLink, normalize, key
   const tomb = { ...tombstones };
 
   const drop = new Set();
-  if (firstLink) {
-    const remoteFields = new Set();
-    for (const r of remote.values()) if (!r.deleted && r.data) remoteFields.add(fieldKey(r.data.title));
+  if (firstLink && remote.size) {
+    // Deleted entries carry no title, so matching by field would miss them;
+    // any empty starter entry the account does not know is dropped.
     for (const item of local) {
-      if (!remote.has(item.id) && !item.value.trim() && remoteFields.has(fieldKey(item.title))) drop.add(item.id);
+      if (!remote.has(item.id) && !item.value.trim() && keyOf(item.title)) drop.add(item.id);
     }
   }
 
