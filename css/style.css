@@ -94,10 +94,13 @@ h1 { margin: 0; text-align: center; font-size: 19px; font-weight: 600; letter-sp
 .banner .close { position: absolute; top: 8px; right: 8px; width: 36px; height: 36px; border: 0; background: none; font-size: 20px; color: var(--muted); }
 
 /* ---------- Reorder ---------- */
-.list-tools { display: flex; justify-content: center; margin: -4px 0 10px; }
+/* Tucked below the list; pinned to the bottom while reordering so Done stays in reach. */
+.list-tools { display: flex; justify-content: center; margin: 20px 0 8px; }
 .list-tools[hidden] { display: none; }
 .pill-btn { border: 0; border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; background: var(--faint); color: var(--muted); }
-.pill-btn[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.list-tools .pill-btn:not([aria-pressed="true"]) { background: none; font-weight: 500; }
+.pill-btn[aria-pressed="true"] { background: var(--ink); color: #fff; padding: 10px 22px; font-size: 14px; }
+body.sorting .list-tools { position: sticky; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
 body.sorting #list li + li::before { width: 100%; }
 .sort-row { display: flex; align-items: center; gap: 12px; padding: 8px 4px 8px 12px; }
 .sort-row .emoji { flex: none; width: 30px; text-align: center; font-size: 22px; }
