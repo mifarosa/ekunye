@@ -128,6 +128,10 @@
     aboutDevTitle: "Made by",
     aboutDevText: "E-Künye is made by Mehmet Faruk Gul. It’s free, has no ads and works without an account.",
     aboutSource: "Source code",
+    aboutCoffee: "Buy me a coffee",
+    aboutAppsTitle: "More of my apps",
+    appHitfilan: "Interval timer for home exercise bike and strength workouts.",
+    appBookling: "Learn languages by reading ebooks, fully offline.",
   },
 
   types: {
