@@ -120,7 +120,7 @@ h1 { margin: 0; text-align: center; font-size: 19px; font-weight: 600; letter-sp
 }
 .icon-btn:active { background: var(--faint); }
 .icon-btn svg { width: 22px; height: 22px; }
-.hint { margin: 2px 0 12px; text-align: center; font-size: 13px; color: var(--muted); }
+.hint { margin: 2px 0 12px; text-align: center; font-size: 13px; line-height: 1.45; text-wrap: balance; color: var(--muted); }
 
 /* ---------- Install hint ---------- */
 .banner {
@@ -137,7 +137,7 @@ h1 { margin: 0; text-align: center; font-size: 19px; font-weight: 600; letter-sp
 .banner-icon { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 13px; background: var(--accent); color: var(--on-accent); }
 .banner-icon svg { width: 21px; height: 21px; }
 .banner-title { margin: 0; font-size: 16px; font-weight: 600; color: var(--ink); }
-.banner-copy { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.banner-copy { margin: 4px 0 0; font-size: 13px; line-height: 1.45; text-wrap: balance; color: var(--muted); }
 .install-steps { margin: 16px 0 0; padding: 0; list-style: none; counter-reset: install-step; }
 .install-steps li { counter-increment: install-step; position: relative; min-height: 21px; padding: 1px 0 0 31px; font-size: 13px; line-height: 1.45; color: var(--ink); }
 .install-steps li + li { margin-top: 9px; }
@@ -395,7 +395,7 @@ textarea.input.single { min-height: 0; height: 50px; resize: none; }
 .about-apps a:active { transform: scale(0.98); }
 .about-app-emoji { flex: none; font-size: 22px; }
 .about-apps strong { display: block; font-size: 14px; font-weight: 600; color: var(--ink); }
-.about-apps strong + span { display: block; margin-top: 2px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.about-apps strong + span { display: block; margin-top: 2px; font-size: 13px; line-height: 1.45; text-wrap: balance; color: var(--muted); }
 
 /* Language switch */
 .segmented { display: flex; gap: 4px; padding: 4px; border-radius: 16px; background: var(--faint); }
@@ -403,7 +403,7 @@ textarea.input.single { min-height: 0; height: 50px; resize: none; }
 .segmented button[aria-checked="true"] { background: var(--bg); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px var(--shadow); }
 
 /* Search: results drop down under the field while typing */
-.search { position: relative; margin: 6px 0 4px; }
+.search { position: relative; margin: 6px 0 16px; }
 .search[hidden] { display: none; }
 body.sorting .search { display: none; }
 .search-icon { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
