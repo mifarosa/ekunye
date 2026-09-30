@@ -16,6 +16,7 @@
   const LANG_KEY = "bilgilerim.lang";
   const TOMB_KEY = "bilgilerim.deleted.v1";
   const SYNC_KEY = "bilgilerim.sync"; // "1" once the user has turned on sync
+  const THEME_KEY = "bilgilerim.theme"; // "light" | "dark"; missing follows the system
 
   // Starter entries, grouped; all of them appear as quick picks in the "add"
   // sheet. Only entries with `seed: true` are pre-filled into the list on first
@@ -30,7 +31,20 @@
         { id: "email", emoji: "✉️", seed: true },
         { id: "phone", emoji: "📱", seed: true },
         { id: "iban", emoji: "🏦", seed: true, hint: "iban", hidden: true },
+        { id: "swift", emoji: "🌍", hint: "swift" },
         { id: "tcId", emoji: "🪪", hint: "tcId", hidden: true },
+      ],
+    },
+    {
+      id: "docs",
+      items: [
+        { id: "idSerial", emoji: "🪪", hint: "idSerial" },
+        { id: "idExpiry", emoji: "📅", hint: "date" },
+        { id: "passportNo", emoji: "🛂", hint: "passport", hidden: true },
+        { id: "passportExpiry", emoji: "📅", hint: "date" },
+        { id: "licenseNo", emoji: "🚘" },
+        { id: "taxNo", emoji: "🧾", hint: "taxNo" },
+        { id: "taxOffice", emoji: "🏛️" },
       ],
     },
     {
@@ -81,6 +95,7 @@
       id: "car",
       items: [
         { id: "plate", emoji: "🚗", hint: "plate" },
+        { id: "vin", emoji: "🔧", hint: "vin" },
         { id: "registration", emoji: "📄", hidden: true },
         { id: "trafficInsurance", emoji: "🛡️", hidden: true },
         { id: "carInsurance", emoji: "🛡️", hidden: true },
@@ -113,6 +128,7 @@
     electricity: "number", water: "number", gas: "number", postcode: "number", hgs: "number",
     bloodType: "blood", medications: "longText", allergies: "longText", conditions: "longText",
     doctorPhone: "phone", emergencyContact: "longText",
+    idExpiry: "date", passportExpiry: "date", taxNo: "number",
   };
   PRESETS.forEach((p) => { p.type = PRESET_TYPES[p.id] || "text"; });
   const FIELDS = window.EKUNYE_FIELDS;
@@ -160,7 +176,7 @@
     "🐾", "✈️", "📝", "⭐", "📌", "🔒",
     "☕", "💍", "🎀", "💒", "💐", "🎂", "🥂", "📅",
     "💑", "⚡", "💧", "🔥", "📮", "📶", "🔢", "📄",
-    "🛡️", "🛣️", "⚠️", "👨‍⚕️", "🆘",
+    "🛡️", "🛣️", "⚠️", "👨‍⚕️", "🆘", "🌍", "🚘", "🏛️", "🔧",
   ];
 
   // ---------------------------------------------------------------------------
@@ -438,6 +454,7 @@
 
   function render() {
     if (sorting && items.length < 2) sorting = false;
+    updateSearch();
     document.body.classList.toggle("sorting", sorting);
     hintEl.textContent = t(sorting ? "sortHint" : "tapHint");
     sortBtn.textContent = t(sorting ? "sortDone" : "sortStart");
@@ -531,28 +548,217 @@
     });
   }
 
-  async function handleTap(id, row) {
+  function handleTap(id, row) {
     const item = items.find((i) => i.id === id);
     if (!item) return;
     if (!item.value.trim()) { openEditor(id); return; }
-
-    const ok = await copyText(item.value);
-    if (ok) {
-      vibrate(20);
-      // Quiet in-place confirmation: the name briefly reads "Copied".
-      const titleEl = row.querySelector(".title");
-      clearTimeout(row._copiedTimer);
-      row.classList.add("copied");
-      titleEl.textContent = t("copied");
-      row._copiedTimer = setTimeout(() => {
-        row.classList.remove("copied");
-        titleEl.textContent = item.title;
-      }, 1100);
-      liveEl.textContent = t("copiedLive", item.title);
-    } else {
-      showToast(t("copyFailed"));
-    }
+    copyItem(item, row, row.querySelector(".title"));
   }
+
+  // Copies an entry's value. `el` briefly gets the "copied" class and
+  // `titleEl` reads "Copied" as a quiet in-place confirmation.
+  async function copyItem(item, el, titleEl) {
+    const ok = await copyText(item.value);
+    if (!ok) { showToast(t("copyFailed")); return; }
+    vibrate(20);
+    clearTimeout(el._copiedTimer);
+    if (!el.classList.contains("copied")) el._title = titleEl.innerHTML; // may hold search highlights
+    el.classList.add("copied");
+    titleEl.textContent = t("copied");
+    el._copiedTimer = setTimeout(() => {
+      el.classList.remove("copied");
+      titleEl.innerHTML = el._title;
+    }, 1100);
+    liveEl.textContent = t("copiedLive", item.title);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Search: matches drop down under the field while typing. Picking an entry
+  // copies it like a tap on its row; starter fields that are not in the list
+  // yet are offered as quick adds.
+  // ---------------------------------------------------------------------------
+  const searchEl = $("#search");
+  const searchInput = $("#searchInput");
+  const searchClear = $("#searchClear");
+  const searchResults = $("#searchResults");
+  const SEARCH_LIMIT = 8;
+  const PRESET_SUGGESTIONS = 3;
+  let searchOptions = []; // [{ el, run }] in the order shown
+  let activeOption = -1;
+
+  // Case, accent and dotless-i insensitive, so "istanbul" finds "İstanbul"
+  // and "sasi" finds "Şasi". Keeps one character per character, which the
+  // highlighting relies on.
+  const fold = (str) => str.toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i");
+
+  // Lower is a better match; -1 is no match.
+  function matchScore(title, value, q, qCompact) {
+    const t0 = fold(title);
+    if (t0.startsWith(q)) return 0;
+    if (t0.split(/\s+/).some((w) => w.startsWith(q))) return 1;
+    if (t0.includes(q)) return 2;
+    if (value && fold(value).replace(/\s+/g, "").includes(qCompact)) return 3;
+    return -1;
+  }
+
+  function highlighted(text, q) {
+    const span = document.createElement("span");
+    const folded = fold(text);
+    const at = folded.length === text.length ? folded.indexOf(q) : -1;
+    if (at < 0) {
+      span.textContent = text;
+      return span;
+    }
+    const mark = document.createElement("mark");
+    mark.className = "hit";
+    mark.textContent = text.slice(at, at + q.length);
+    span.append(text.slice(0, at), mark, text.slice(at + q.length));
+    return span;
+  }
+
+  function addOption({ emoji, title, q, valueText, valueClass, label, run }) {
+    const li = document.createElement("li");
+    li.className = "search-opt";
+    li.id = `search-opt-${searchOptions.length}`;
+    li.setAttribute("role", "option");
+    li.setAttribute("aria-selected", "false");
+    if (label) li.setAttribute("aria-label", label);
+
+    const icon = document.createElement("span");
+    icon.className = "opt-emoji";
+    icon.textContent = emoji;
+    icon.setAttribute("aria-hidden", "true");
+    const text = document.createElement("span");
+    text.className = "opt-text";
+    const titleEl = highlighted(title, q);
+    titleEl.className = "opt-title";
+    const value = document.createElement("span");
+    value.className = `opt-value ${valueClass}`.trim();
+    value.textContent = valueText;
+    text.append(titleEl, value);
+    li.append(icon, text);
+
+    const go = () => run(li, titleEl);
+    li.addEventListener("pointerdown", (e) => e.preventDefault()); // keep the field focused
+    li.addEventListener("click", go);
+    searchResults.appendChild(li);
+    searchOptions.push({ el: li, run: go });
+  }
+
+  function updateSearch() {
+    searchEl.hidden = items.length === 0;
+    searchClear.hidden = !searchInput.value;
+    searchResults.replaceChildren();
+    searchOptions = [];
+    setActive(-1);
+    const raw = searchInput.value.trim();
+    if (!raw || sorting || searchEl.hidden) { showResults(false); return; }
+
+    const q = fold(raw);
+    const qCompact = q.replace(/\s+/g, "");
+    // Values of hidden entries are not searched, so they cannot be guessed.
+    const hits = items
+      .map((item, pos) => ({ item, pos, score: matchScore(item.title, item.hidden ? "" : item.value, q, qCompact) }))
+      .filter((h) => h.score >= 0)
+      .sort((a, b) => a.score - b.score || a.pos - b.pos)
+      .slice(0, SEARCH_LIMIT);
+    for (const { item } of hits) {
+      const empty = !item.value.trim();
+      addOption({
+        emoji: item.emoji || "📌",
+        title: item.title,
+        q,
+        valueText: empty ? t("tapToAdd") : item.hidden ? "••••••••" : item.value,
+        valueClass: empty ? "empty" : item.hidden ? "masked" : "",
+        label: item.hidden && !empty ? t("hiddenAria", item.title) : null,
+        run: (el, titleEl) => {
+          if (!empty) { copyItem(item, el, titleEl); return; }
+          showResults(false);
+          openEditor(item.id);
+        },
+      });
+    }
+
+    const listed = new Set(items.map((i) => (findPreset(i.title) || {}).id));
+    PRESETS
+      .filter((p) => !listed.has(p.id))
+      .map((p) => ({ p, score: matchScore(presetTitle(p), "", q, qCompact) }))
+      .filter((m) => m.score >= 0)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, PRESET_SUGGESTIONS)
+      .forEach(({ p }) => addOption({
+        emoji: p.emoji,
+        title: presetTitle(p),
+        q,
+        valueText: t("searchAddPreset"),
+        valueClass: "add",
+        run: () => { showResults(false); openEditor(null); applyPreset(p); },
+      }));
+
+    if (!searchOptions.length) {
+      addOption({
+        emoji: "📌",
+        title: raw,
+        q,
+        valueText: t("searchAddNew"),
+        valueClass: "add",
+        run: () => {
+          showResults(false);
+          openEditor(null);
+          titleInput.value = raw;
+          updateSaveState();
+          valueInput.focus();
+        },
+      });
+    }
+    showResults(document.activeElement === searchInput || !searchResults.hidden);
+  }
+
+  function showResults(open) {
+    searchResults.hidden = !open;
+    searchInput.setAttribute("aria-expanded", String(open));
+  }
+
+  function setActive(index) {
+    activeOption = index;
+    searchOptions.forEach((o, i) => o.el.setAttribute("aria-selected", String(i === index)));
+    if (index < 0) { searchInput.removeAttribute("aria-activedescendant"); return; }
+    const el = searchOptions[index].el;
+    searchInput.setAttribute("aria-activedescendant", el.id);
+    el.scrollIntoView({ block: "nearest" });
+  }
+
+  searchInput.addEventListener("input", () => {
+    updateSearch();
+    if (searchInput.value.trim()) showResults(true);
+  });
+  searchInput.addEventListener("focus", () => { if (searchInput.value.trim()) showResults(true); });
+  searchInput.addEventListener("keydown", (e) => {
+    const n = searchOptions.length;
+    if (e.key === "ArrowDown" && n) {
+      e.preventDefault();
+      showResults(true);
+      setActive((activeOption + 1) % n);
+    } else if (e.key === "ArrowUp" && n) {
+      e.preventDefault();
+      setActive(activeOption <= 0 ? n - 1 : activeOption - 1);
+    } else if (e.key === "Enter" && n && !searchResults.hidden) {
+      e.preventDefault();
+      searchOptions[Math.max(activeOption, 0)].run();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      if (searchInput.value) { searchInput.value = ""; updateSearch(); } else searchInput.blur();
+    }
+  });
+  searchClear.addEventListener("click", () => {
+    searchInput.value = "";
+    updateSearch();
+    searchInput.focus();
+  });
+  document.addEventListener("pointerdown", (e) => {
+    if (!searchEl.contains(e.target)) showResults(false);
+  });
 
   // ---------------------------------------------------------------------------
   // Sheets (shared open/close)
@@ -693,21 +899,24 @@
         chip.type = "button";
         chip.className = "chip";
         chip.textContent = `${p.emoji} ${presetTitle(p)}`;
-        chip.addEventListener("click", () => {
-          emojiInput.value = p.emoji;
-          titleInput.value = presetTitle(p);
-          hiddenInput.checked = !!p.hidden;
-          editPreset = p;
-          setEditType(p.type);
-          syncEmojiSelection();
-          updateSaveState();
-          valueInput.focus();
-        });
+        chip.addEventListener("click", () => applyPreset(p));
         chips.appendChild(chip);
       }
       wrap.append(label, chips);
       presetSection.appendChild(wrap);
     }
+  }
+
+  // Fills the editor with a starter field, ready for its value.
+  function applyPreset(p) {
+    emojiInput.value = p.emoji;
+    titleInput.value = presetTitle(p);
+    hiddenInput.checked = !!p.hidden;
+    editPreset = p;
+    setEditType(p.type);
+    syncEmojiSelection();
+    updateSaveState();
+    valueInput.focus();
   }
 
   function updateSaveState() {
@@ -1131,6 +1340,49 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Theme: follows the system unless light or dark is picked. js/boot.js
+  // applies the saved choice before the first paint.
+  // ---------------------------------------------------------------------------
+  const themeSwitch = $("#themeSwitch");
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const THEME_COLORS = { light: "#FFFFFF", dark: "#111418" }; // match --bg in css/style.css
+
+  function savedTheme() {
+    try { return localStorage.getItem(THEME_KEY) || "system"; } catch (_) { return "system"; }
+  }
+
+  function applyTheme(choice) {
+    const root = document.documentElement;
+    if (choice === "light" || choice === "dark") root.dataset.theme = choice;
+    else delete root.dataset.theme;
+    const dark = choice === "dark" || (choice === "system" && darkQuery.matches);
+    themeMeta.content = THEME_COLORS[dark ? "dark" : "light"];
+  }
+
+  function buildThemeSwitch() {
+    const current = savedTheme();
+    themeSwitch.replaceChildren();
+    for (const [choice, key] of [["system", "themeSystem"], ["light", "themeLight"], ["dark", "themeDark"]]) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", String(choice === current));
+      b.textContent = t(key);
+      b.addEventListener("click", () => {
+        try { choice === "system" ? localStorage.removeItem(THEME_KEY) : localStorage.setItem(THEME_KEY, choice); } catch (_) {}
+        applyTheme(choice);
+        buildThemeSwitch();
+      });
+      themeSwitch.appendChild(b);
+    }
+  }
+
+  const onSystemTheme = () => applyTheme(savedTheme());
+  if (darkQuery.addEventListener) darkQuery.addEventListener("change", onSystemTheme);
+  else if (darkQuery.addListener) darkQuery.addListener(onSystemTheme);
+
+  // ---------------------------------------------------------------------------
   // Language switch
   // ---------------------------------------------------------------------------
   const langSwitch = $("#langSwitch");
@@ -1175,11 +1427,13 @@
     if (changed) save();
     applyStaticText();
     buildLangSwitch();
+    buildThemeSwitch();
     buildPresetChips();
     buildTypeChips();
     render();
     updateBanner();
     renderSync();
+    lock.render();
   }
 
   // ---------------------------------------------------------------------------
@@ -1192,7 +1446,10 @@
   save(); // writes seeds on first launch and upgrades older records in place
 
   applyStaticText();
+  const lock = window.EKUNYE_LOCK.start({ t, toast: showToast, confirm: (message) => confirm(message) });
+  applyTheme(savedTheme());
   buildLangSwitch();
+  buildThemeSwitch();
   buildEmojiGrid();
   buildPresetChips();
   buildTypeChips();
