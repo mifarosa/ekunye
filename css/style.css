@@ -161,6 +161,12 @@ h1 { margin: 0; text-align: center; font-size: 19px; font-weight: 600; letter-sp
 .pill-btn[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); padding: 10px 22px; font-size: 14px; }
 body.sorting .list-tools { position: sticky; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
 body.sorting #list li + li::before { width: 100%; }
+/* Support link after the last row: seen by anyone who scrolls, never in the way */
+.list-coffee { margin: 28px 0 8px; text-align: center; }
+.list-coffee p { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+.coffee-pill { display: inline-block; border-radius: 999px; padding: 9px 18px; font-size: 14px; font-weight: 600; background: #FFDD00; color: #14181E; text-decoration: none; }
+.coffee-pill:active { transform: scale(0.97); }
+body.sorting .list-coffee { display: none; }
 .sort-row { display: flex; align-items: center; gap: 12px; padding: 8px 4px 8px 12px; }
 .sort-row .emoji { flex: none; width: 30px; text-align: center; font-size: 22px; }
 body.sorting .banner { display: none; }

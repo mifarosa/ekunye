@@ -168,6 +168,7 @@
     aboutDevText: "E-Künye, Mehmet Faruk Gul tarafından geliştirildi. Ücretsizdir, reklam içermez ve hesap açmadan da kullanılabilir.",
     aboutSource: "Kaynak kod",
     aboutCoffee: "Bana bir kahve ısmarla",
+    coffeeNote: "E-Künye ücretsiz ve reklamsız.",
     aboutAppsTitle: "Diğer uygulamalarım",
     appHitfilan: "Evde kondisyon bisikleti ve kuvvet antrenmanı için zamanlayıcı.",
     appBookling: "E-kitap okuyarak dil öğren; internetsiz çalışır.",
