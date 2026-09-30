@@ -7,7 +7,7 @@
 <title>E-Künye</title>
 <meta name="description" content="Kişisel bilgilerini tek dokunuşla kopyala.">
 <meta name="theme-color" content="#FFFFFF">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -19,6 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<script src="js/boot.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -31,6 +32,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
       </button>
     </header>
+    <div id="search" class="search" role="search">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+      <input id="searchInput" class="search-input" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchResults" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" data-i18n-placeholder="searchPlaceholder" data-i18n-aria="searchLabel">
+      <button id="searchClear" class="search-clear" type="button" data-i18n-aria="searchClear" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg>
+      </button>
+      <ul id="searchResults" class="search-results" role="listbox" data-i18n-aria="searchLabel" hidden></ul>
+    </div>
     <p id="hint" class="hint">Kopyalamak için dokun, düzenlemek veya silmek için basılı tut.</p>
 
     <div id="banner" class="banner" hidden>
@@ -55,6 +64,12 @@
       <p id="empty" class="empty-state" data-i18n-html="emptyState" hidden>Listen boş.<br>Sağ üstteki + ile ilk bilgini ekle.</p>
       <div class="list-tools">
         <button id="sortBtn" class="pill-btn" type="button" aria-pressed="false"></button>
+      </div>
+      <div class="list-coffee">
+        <p data-i18n="coffeeNote">E-Künye ücretsiz ve reklamsız.</p>
+        <a class="coffee-pill" href="https://buymeacoffee.com/mifarosa" target="_blank" rel="noopener">
+          <span aria-hidden="true">☕</span> <span data-i18n="aboutCoffee"></span>
+        </a>
       </div>
     </main>
   </div>
@@ -111,12 +126,30 @@
     </div>
   </div>
 
-  <!-- Settings sheet: language and backup -->
+  <!-- Settings sheet: language, theme, lock, sync, backup and about -->
   <div id="menu" class="overlay" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
     <div class="sheet">
       <h2 id="menuTitle" data-i18n="settings">Ayarlar</h2>
       <span class="field-label" data-i18n="language">Dil</span>
       <div id="langSwitch" class="segmented" role="radiogroup" aria-label="Dil" data-i18n-aria="language"></div>
+      <span class="field-label" data-i18n="theme">Görünüm</span>
+      <div id="themeSwitch" class="segmented" role="radiogroup" aria-label="Görünüm" data-i18n-aria="theme"></div>
+      <span class="field-label" data-i18n="lockSection">Uygulama kilidi</span>
+      <div class="sync-card">
+        <p id="lockCardText" class="sync-text"></p>
+        <label id="lockBioRow" class="toggle card-toggle" hidden>
+          <span class="toggle-text">
+            <strong data-i18n="lockBioTitle">Face ID / parmak izi ile aç</strong>
+            <small data-i18n="lockBioDesc">PIN yerine cihazının kendi kilidini kullan.</small>
+          </span>
+          <input id="lockBioInput" type="checkbox" role="switch">
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+        <div class="sync-actions">
+          <button id="lockPrimary" class="btn primary" hidden></button>
+          <button id="lockSecondary" class="btn quiet" hidden></button>
+        </div>
+      </div>
       <span class="field-label" data-i18n="sync">Eşitleme</span>
       <div class="sync-card">
         <p id="syncText" class="sync-text"></p>
@@ -221,9 +254,26 @@
     </form>
   </div>
 
+  <!-- App lock: PIN screen, also used to set or change the PIN -->
+  <div id="lockScreen" class="lock-screen" role="dialog" aria-modal="true" aria-labelledby="lockTitle" tabindex="-1" hidden>
+    <div class="lock-inner">
+      <img class="lock-icon" src="icons/icon-192.png" width="64" height="64" alt="">
+      <h2 id="lockTitle"></h2>
+      <p id="lockText" class="lock-text"></p>
+      <div id="lockDots" class="lock-dots" aria-hidden="true"></div>
+      <p id="lockError" class="lock-error" role="alert"></p>
+      <div id="lockPad" class="lock-pad"></div>
+      <div class="lock-actions">
+        <button id="lockForgot" class="btn quiet" type="button" data-i18n="lockForgot" hidden>PIN'imi unuttum</button>
+        <button id="lockCancel" class="btn quiet" type="button" data-i18n="cancel" hidden>Vazgeç</button>
+      </div>
+    </div>
+  </div>
+
 <script src="lang/tr.js"></script>
 <script src="lang/en.js"></script>
 <script src="js/fields.js"></script>
+<script src="js/lock.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

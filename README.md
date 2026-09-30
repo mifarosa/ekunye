@@ -15,9 +15,12 @@ Available in Turkish and English.
 ## Features
 
 - **Tap to copy, hold to edit.** On desktop, right-click or press <kbd>E</kbd> to edit.
-- **Ready-made fields in groups:** my details, family, spouse, special dates, home and bills, car, and health and emergency. Each field comes with a matching emoji, input hint and keyboard type.
+- **Ready-made fields in groups:** my details (including SWIFT/BIC), ID and documents (ID card serial and expiry, passport, driving licence, tax number and office), family, spouse, special dates, home and bills, car (including the chassis number), and health and emergency. Each field comes with a matching emoji, input hint and keyboard type.
 - **Field types:** text, long text, phone, email, number, IBAN, national ID, date and blood type. Each type opens the right keyboard and tidies the value on save (IBAN in groups of four, phone numbers, dates as DD.MM.YYYY). It also warns about likely typos, such as a wrong IBAN check digit or an invalid Turkish ID number, without blocking the save. Blood type is picked from a list.
 - **Fully editable:** rename, delete or re-emoji any field, or add your own. **Reorder** mode moves rows up and down.
+- **Search:** results drop down while you type; picking one copies it. Matching ignores case and Turkish accents, and starter fields not in your list yet are offered as quick adds.
+- **App lock:** an optional 6-digit PIN, with Face ID or fingerprint where the device supports it, asked at launch and after more than a minute in the background.
+- **Light and dark themes:** follows the system, or pick one under Settings.
 - **Hide in list:** sensitive values such as IBANs, ID numbers and Wi-Fi passwords show as dots but still copy on tap.
 - **Optional sync:** sign in with Google to see the same list on your phone and computer. Entries are encrypted on the device with a sync password before upload.
 - **Backup and restore:** export the whole list as a JSON file (through the share sheet where the browser supports it) and restore it on any device.
@@ -31,6 +34,8 @@ By default your data never leaves the device. It lives in the browser's `localSt
 
 Sync is opt-in. When you turn it on, each entry is encrypted in the browser with AES-256-GCM, using a key derived from your sync password (PBKDF2-SHA256, 600,000 iterations), before it is written to Firestore. The server only stores ciphertext. Each record is bound to its account and entry id, so it cannot be moved elsewhere and still decrypt. Nobody, including the project owner, can read the synced entries without the password. If the password is forgotten, the cloud copy is wiped and uploaded again from a device that still has the list.
 
+The app lock keeps the list from whoever picks up an unlocked phone. It is a screen lock, not encryption: the PIN is stored as a salted PBKDF2 hash, wrong PINs are throttled, and Face ID / fingerprint unlock uses a device passkey (WebAuthn) checked on the device. A forgotten PIN can only be cleared by erasing the data on that device; the saved sync key goes too, so the sync password is needed to restore a synced list.
+
 Without sync, clearing browser data or switching phones will lose the list unless you have a backup. Installing to the home screen makes storage more durable, especially on iOS. Backup files are plain JSON and are not encrypted, so keep them somewhere safe.
 
 ## Project structure
@@ -39,8 +44,10 @@ Without sync, clearing browser data or switching phones will lose the list unles
 |---|---|
 | `index.html` | Page markup; text is filled in from the language files |
 | `css/style.css` | Styles |
+| `js/boot.js` | Runs before the first paint: applies the saved theme and hides the list while the app lock is on |
+| `js/lock.js` | App lock: PIN screen, throttling, Face ID / fingerprint through WebAuthn |
 | `js/fields.js` | Field types: keyboard, formatting and validation per type |
-| `js/app.js` | App logic: list, editor, backup, install hint, language switch, sync UI |
+| `js/app.js` | App logic: list, search, editor, backup, install hint, language and theme switch, sync UI |
 | `js/sync.js` | Optional sync: Google sign-in and Firestore (loaded only when sync is used) |
 | `js/sync-core.js` | Encryption and the merge between local and cloud entries, with no Firebase dependency |
 | `firestore.rules` | Firestore security rules: each user can only reach their own encrypted records |
