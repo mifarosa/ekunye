@@ -119,6 +119,13 @@
     themeSystem: "System",
     themeLight: "Light",
     themeDark: "Dark",
+    layout: "List style",
+    layoutSimple: "Simple",
+    layoutButtons: "With buttons",
+    copyBtn: "Copy",
+    editBtn: "Edit",
+    tipHold: "Hold a row to edit or delete it.",
+    tipShowButtons: "Show buttons",
 
     searchLabel: "Search your details",
     searchPlaceholder: "Search",

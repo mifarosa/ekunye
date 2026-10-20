@@ -209,6 +209,27 @@ body.sorting .banner { display: none; }
 .value.empty { font-size: 15px; font-weight: 400; color: var(--soft); }
 .value.masked { letter-spacing: 0.22em; color: var(--ink); }
 .row.copied .title { color: var(--accent); }
+.row-text { display: contents; }
+
+/* "With buttons" layout: left-aligned rows with copy and edit buttons */
+body.layout-buttons #list li + li::before { width: 100%; }
+.item-line { display: flex; align-items: center; gap: 2px; }
+.item-line .row { flex: 1; min-width: 0; flex-direction: row; gap: 14px; padding: 14px 8px; border-radius: 16px; text-align: left; }
+.item-line .emoji { flex: none; width: 32px; text-align: center; font-size: 26px; }
+.item-line .row-text { display: flex; flex-direction: column; min-width: 0; }
+.item-line .title { margin-top: 0; }
+.item-line .value { margin-top: 2px; max-width: none; font-size: 16px; }
+.item-line .value.empty { font-size: 15px; }
+.item-line.copied .title { color: var(--accent); }
+.item-btn { flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%; display: grid; place-items: center; background: none; color: var(--muted); }
+.item-btn:active { background: var(--faint); }
+@media (hover: hover) { .item-btn:hover { background: var(--faint); color: var(--ink); } }
+.item-btn svg { width: 21px; height: 21px; }
+.item-btn.off { visibility: hidden; }
+.copy-btn .i-check { display: none; }
+.item-line.copied .copy-btn { color: var(--accent); }
+.item-line.copied .copy-btn .i-copy { display: none; }
+.item-line.copied .copy-btn .i-check { display: block; }
 .empty-state { margin: 80px 24px; text-align: center; color: var(--muted); line-height: 1.6; }
 .empty-state[hidden] { display: none; }
 

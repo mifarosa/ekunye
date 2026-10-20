@@ -119,6 +119,13 @@
     themeSystem: "Sistem",
     themeLight: "Açık",
     themeDark: "Koyu",
+    layout: "Liste düzeni",
+    layoutSimple: "Sade",
+    layoutButtons: "Düğmeli",
+    copyBtn: "Kopyala",
+    editBtn: "Düzenle",
+    tipHold: "Düzenlemek ya da silmek için satırı basılı tut.",
+    tipShowButtons: "Düğmeleri göster",
 
     searchLabel: "Bilgilerinde ara",
     searchPlaceholder: "Ara",
