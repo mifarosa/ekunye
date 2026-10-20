@@ -14,7 +14,7 @@ Available in Turkish and English.
 
 ## Features
 
-- **Tap to copy, hold to edit.** On desktop, right-click or press <kbd>E</kbd> to edit.
+- **Tap to copy, hold to edit.** On desktop, right-click or press <kbd>E</kbd> to edit. The first copy mentions holding once. Prefer visible controls? Switch the list style to **With buttons** under Settings to get copy and edit buttons on every row.
 - **Ready-made fields in groups:** my details (including SWIFT/BIC), ID and documents (ID card serial and expiry, passport, driving licence, tax number and office), family, spouse, special dates, home and bills, car (including the chassis number), and health and emergency. Each field comes with a matching emoji, input hint and keyboard type.
 - **Field types:** text, long text, phone, email, number, IBAN, national ID, date and blood type. Each type opens the right keyboard and tidies the value on save (IBAN in groups of four, phone numbers, dates as DD.MM.YYYY). It also warns about likely typos, such as a wrong IBAN check digit or an invalid Turkish ID number, without blocking the save. Blood type is picked from a list.
 - **Fully editable:** rename, delete or re-emoji any field, or add your own. **Reorder** mode moves rows up and down.

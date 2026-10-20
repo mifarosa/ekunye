@@ -17,6 +17,8 @@
   const TOMB_KEY = "bilgilerim.deleted.v1";
   const SYNC_KEY = "bilgilerim.sync"; // "1" once the user has turned on sync
   const THEME_KEY = "bilgilerim.theme"; // "light" | "dark"; missing follows the system
+  const LAYOUT_KEY = "bilgilerim.layout"; // "buttons" shows copy and edit buttons; missing is the simple list
+  const TIP_KEY = "bilgilerim.tip.hold"; // "1" once the hold-to-edit tip has been shown
 
   // Starter entries, grouped; all of them appear as quick picks in the "add"
   // sheet. Only entries with `seed: true` are pre-filled into the list on first
@@ -455,8 +457,11 @@
   function render() {
     if (sorting && items.length < 2) sorting = false;
     updateSearch();
+    const buttons = layout === "buttons";
     document.body.classList.toggle("sorting", sorting);
+    document.body.classList.toggle("layout-buttons", buttons);
     hintEl.textContent = t(sorting ? "sortHint" : "tapHint");
+    hintEl.hidden = buttons && !sorting; // the buttons explain themselves
     sortBtn.textContent = t(sorting ? "sortDone" : "sortStart");
     sortBtn.setAttribute("aria-pressed", String(sorting));
     sortBtn.parentElement.hidden = items.length < 2;
@@ -483,6 +488,8 @@
       emoji.textContent = item.emoji || "📌";
       emoji.setAttribute("aria-hidden", "true");
 
+      const text = document.createElement("span");
+      text.className = "row-text";
       const title = document.createElement("span");
       title.className = "title";
       title.textContent = item.title;
@@ -502,12 +509,44 @@
         value.textContent = item.value;
       }
 
-      row.append(emoji, title, value);
+      text.append(title, value);
+      row.append(emoji, text);
       attachPressHandlers(row, item.id);
-      li.appendChild(row);
+      li.appendChild(buttons ? withButtons(item, row, title, isEmpty) : row);
       listEl.appendChild(li);
     }
     emptyEl.hidden = items.length > 0;
+  }
+
+  // "With buttons" layout: the row still copies on tap and edits on hold, and
+  // visible copy and edit buttons sit next to it. The buttons are the keyboard
+  // path, so the row itself leaves the tab order.
+  const COPY_ICON = '<svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+  const EDIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>';
+
+  function withButtons(item, row, titleEl, isEmpty) {
+    const line = document.createElement("div");
+    line.className = "item-line";
+    row.tabIndex = -1;
+
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "item-btn copy-btn";
+    copy.innerHTML = COPY_ICON;
+    copy.setAttribute("aria-label", `${t("copyBtn")}: ${item.title}`);
+    if (isEmpty) copy.classList.add("off");
+    copy.disabled = isEmpty;
+    copy.addEventListener("click", () => copyItem(item, line, titleEl));
+
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "item-btn";
+    edit.innerHTML = EDIT_ICON;
+    edit.setAttribute("aria-label", `${t("editBtn")}: ${item.title}`);
+    edit.addEventListener("click", () => openEditor(item.id));
+
+    line.append(row, copy, edit);
+    return line;
   }
 
   // Tap copies, long press (or right click / "e" key) opens the editor.
@@ -548,18 +587,32 @@
     });
   }
 
-  function handleTap(id, row) {
+  async function handleTap(id, row) {
     const item = items.find((i) => i.id === id);
     if (!item) return;
     if (!item.value.trim()) { openEditor(id); return; }
-    copyItem(item, row, row.querySelector(".title"));
+    const line = row.closest(".item-line");
+    const ok = await copyItem(item, line || row, row.querySelector(".title"));
+    if (ok && !line) showHoldTip();
+  }
+
+  // The simple list hides editing behind a long press, so the first copy
+  // mentions it once, with a shortcut to the layout that shows buttons.
+  function showHoldTip() {
+    try {
+      if (localStorage.getItem(TIP_KEY)) return;
+      localStorage.setItem(TIP_KEY, "1");
+    } catch (_) {
+      return;
+    }
+    setTimeout(() => showToast(t("tipHold"), { label: t("tipShowButtons"), fn: () => setLayout("buttons") }), 900);
   }
 
   // Copies an entry's value. `el` briefly gets the "copied" class and
   // `titleEl` reads "Copied" as a quiet in-place confirmation.
   async function copyItem(item, el, titleEl) {
     const ok = await copyText(item.value);
-    if (!ok) { showToast(t("copyFailed")); return; }
+    if (!ok) { showToast(t("copyFailed")); return false; }
     vibrate(20);
     clearTimeout(el._copiedTimer);
     if (!el.classList.contains("copied")) el._title = titleEl.innerHTML; // may hold search highlights
@@ -570,6 +623,7 @@
       titleEl.innerHTML = el._title;
     }, 1100);
     liveEl.textContent = t("copiedLive", item.title);
+    return true;
   }
 
   // ---------------------------------------------------------------------------
@@ -1378,6 +1432,30 @@
     }
   }
 
+  // List layout: "simple" (centred rows, tap and hold) or "buttons".
+  const layoutSwitch = $("#layoutSwitch");
+  let layout = (() => { try { return localStorage.getItem(LAYOUT_KEY) === "buttons" ? "buttons" : "simple"; } catch (_) { return "simple"; } })();
+
+  function setLayout(next) {
+    layout = next;
+    try { next === "buttons" ? localStorage.setItem(LAYOUT_KEY, next) : localStorage.removeItem(LAYOUT_KEY); } catch (_) {}
+    buildLayoutSwitch();
+    render();
+  }
+
+  function buildLayoutSwitch() {
+    layoutSwitch.replaceChildren();
+    for (const [choice, key] of [["simple", "layoutSimple"], ["buttons", "layoutButtons"]]) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", String(choice === layout));
+      b.textContent = t(key);
+      b.addEventListener("click", () => setLayout(choice));
+      layoutSwitch.appendChild(b);
+    }
+  }
+
   const onSystemTheme = () => applyTheme(savedTheme());
   if (darkQuery.addEventListener) darkQuery.addEventListener("change", onSystemTheme);
   else if (darkQuery.addListener) darkQuery.addListener(onSystemTheme);
@@ -1428,6 +1506,7 @@
     applyStaticText();
     buildLangSwitch();
     buildThemeSwitch();
+    buildLayoutSwitch();
     buildPresetChips();
     buildTypeChips();
     render();
@@ -1450,6 +1529,7 @@
   applyTheme(savedTheme());
   buildLangSwitch();
   buildThemeSwitch();
+  buildLayoutSwitch();
   buildEmojiGrid();
   buildPresetChips();
   buildTypeChips();
