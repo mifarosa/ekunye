@@ -1145,6 +1145,28 @@
   });
 
   // ---------------------------------------------------------------------------
+  // "Recommend to a friend": the share sheet where there is one, otherwise the
+  // message and link are copied for pasting.
+  // ---------------------------------------------------------------------------
+  const SITE_URL = "https://ekunye.mifarosa.com/";
+
+  async function shareApp() {
+    const data = { title: "E-Künye", text: t("shareText"), url: SITE_URL };
+    if (navigator.share) {
+      try {
+        await navigator.share(data);
+        return;
+      } catch (e) {
+        if (e && e.name === "AbortError") return; // closed the share sheet
+      }
+    }
+    if (await copyText(`${data.text} ${SITE_URL}`)) showToast(t("shareCopied"));
+    else showToast(t("copyFailed"));
+  }
+
+  document.querySelectorAll("[data-share]").forEach((b) => b.addEventListener("click", shareApp));
+
+  // ---------------------------------------------------------------------------
   // "Add to home screen" hint (installed apps keep their storage reliably)
   // ---------------------------------------------------------------------------
   const banner = $("#banner");
