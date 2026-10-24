@@ -5,7 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://*.googleapis.com https://www.gstatic.com https://ekunye-d7c7f.firebaseapp.com; frame-src https://ekunye-d7c7f.firebaseapp.com https://accounts.google.com https://apis.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>E-Künye</title>
-<meta name="description" content="Kişisel bilgilerini tek dokunuşla kopyala.">
+<meta name="description" content="IBAN, TC kimlik, adres gibi formlarda istenen bilgilerini tek dokunuşla kopyala. Ücretsiz, reklamsız, hesap gerektirmez.">
+<link rel="canonical" href="https://ekunye.mifarosa.com/">
+<!-- Link previews (WhatsApp, LinkedIn, X and others) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="E-Künye">
+<meta property="og:url" content="https://ekunye.mifarosa.com/">
+<meta property="og:title" content="E-Künye: bilgilerin tek dokunuşla kopyalansın">
+<meta property="og:description" content="IBAN, TC kimlik, adres gibi formlarda istenen bilgilerini tek dokunuşla kopyala. Ücretsiz, reklamsız, hesap gerektirmez.">
+<meta property="og:image" content="https://ekunye.mifarosa.com/icons/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="E-Künye: telefonda ev adresi, IBAN ve telefon numarasının olduğu liste">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#FFFFFF">
 <meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -67,6 +81,10 @@
       </div>
       <div class="list-coffee">
         <p data-i18n="coffeeNote">E-Künye ücretsiz ve reklamsız.</p>
+        <button class="share-pill" type="button" data-share>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m0 0L8 7m4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg>
+          <span data-i18n="shareApp">Arkadaşına öner</span>
+        </button>
         <a class="coffee-pill" href="https://buymeacoffee.com/mifarosa" target="_blank" rel="noopener">
           <span aria-hidden="true">☕</span> <span data-i18n="aboutCoffee"></span>
         </a>
@@ -176,6 +194,11 @@
       <button id="resetBtn" class="menu-item danger">
         <strong data-i18n="resetTitle">Listeyi sıfırla</strong>
         <span data-i18n="resetDesc">Tüm bilgilerin silinir, başlangıç alanları geri gelir</span>
+      </button>
+
+      <button class="menu-item" type="button" data-share>
+        <strong data-i18n="shareApp">Arkadaşına öner</strong>
+        <span data-i18n="shareAppDesc">E-Künye bağlantısını bir mesajla paylaş</span>
       </button>
 
       <span class="field-label" data-i18n="about">Hakkında</span>
