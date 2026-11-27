@@ -220,7 +220,7 @@
       : Date.now().toString(36) + Math.random().toString(36).slice(2);
 
   // Current record shape: { id, emoji, title, value, hidden, type, holder, updatedAt }.
-  // `holder` is the account holder's name shown under an IBAN's QR code.
+  // `holder` is the account holder's name, shown with an IBAN on the big display.
   // Records saved before types existed take the type of the starter field
   // their title matches, or plain text.
   // Every record from storage or a backup file goes through this function, so
@@ -517,7 +517,7 @@
       row.append(emoji, text);
       attachPressHandlers(row, item.id);
       li.appendChild(buttons ? withButtons(item, row, title, isEmpty) : row);
-      if (!buttons && hasQr(item)) li.appendChild(qrPill(item));
+      if (!buttons && canShowBig(item)) li.appendChild(showPill(item));
       listEl.appendChild(li);
     }
     emptyEl.hidden = items.length > 0;
@@ -529,7 +529,7 @@
   const COPY_ICON = '<svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
   const EDIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>';
 
-  const QR_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 14h2M14 18v2M18 18h2v2"/></svg>';
+  const SHOW_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
 
   function withButtons(item, row, titleEl, isEmpty) {
     const line = document.createElement("div");
@@ -552,14 +552,14 @@
     edit.setAttribute("aria-label", `${t("editBtn")}: ${item.title}`);
     edit.addEventListener("click", () => openEditor(item.id));
 
-    if (hasQr(item)) {
-      const qr = document.createElement("button");
-      qr.type = "button";
-      qr.className = "item-btn";
-      qr.innerHTML = QR_ICON;
-      qr.setAttribute("aria-label", t("qrShowAria", item.title));
-      qr.addEventListener("click", () => openQr(item));
-      line.append(row, qr, copy, edit);
+    if (canShowBig(item)) {
+      const show = document.createElement("button");
+      show.type = "button";
+      show.className = "item-btn";
+      show.innerHTML = SHOW_ICON;
+      show.setAttribute("aria-label", t("showBigAria", item.title));
+      show.addEventListener("click", () => openBig(item));
+      line.append(row, show, copy, edit);
     } else {
       line.append(row, copy, edit);
     }
@@ -832,80 +832,71 @@
   });
 
   // ---------------------------------------------------------------------------
-  // IBAN as a QR code: the other person scans it with their camera and gets
-  // the IBAN as text. The holder's name is printed under the code, not put in
-  // it, so a scanned IBAN pastes cleanly into a bank form. The QR library is
-  // loaded the first time a code is shown.
+  // IBAN on the big display: large, in groups of four, with the holder's
+  // name, for the other person to read off the screen. The screen is kept on
+  // while it is open where the browser allows it.
   // ---------------------------------------------------------------------------
-  const qrSheet = $("#qrSheet");
-  const qrCode = $("#qrCode");
-  let qrLib = null;
-  let qrItem = null;
+  const ibanSheet = $("#ibanSheet");
+  const ibanValue = $("#ibanValue");
+  const ibanHolder = $("#ibanHolder");
+  let bigItem = null;
+  let wakeLock = null;
 
-  const hasQr = (item) => item.type === "iban" && !!item.value.trim();
+  const canShowBig = (item) => item.type === "iban" && !!item.value.trim();
 
-  function qrPill(item) {
+  function showPill(item) {
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "qr-pill";
-    b.innerHTML = `${QR_ICON}<span></span>`;
-    b.lastChild.textContent = t("qrShow");
-    b.setAttribute("aria-label", t("qrShowAria", item.title));
-    b.addEventListener("click", () => openQr(item));
+    b.className = "show-pill";
+    b.innerHTML = `${SHOW_ICON}<span></span>`;
+    b.lastChild.textContent = t("showBig");
+    b.setAttribute("aria-label", t("showBigAria", item.title));
+    b.addEventListener("click", () => openBig(item));
     return b;
   }
 
-  function loadQrLib() {
-    if (!qrLib) {
-      qrLib = new Promise((resolve, reject) => {
-        if (window.qrcode) { resolve(window.qrcode); return; }
-        const script = document.createElement("script");
-        script.src = "js/vendor/qrcode.js";
-        script.onload = () => (window.qrcode ? resolve(window.qrcode) : reject(new Error("qrcode missing")));
-        script.onerror = reject;
-        document.head.appendChild(script);
-      }).catch((err) => { qrLib = null; throw err; });
-    }
-    return qrLib;
+  // "TR330006…" becomes groups of four; anything that is not an IBAN is shown as typed.
+  function ibanGroups(value) {
+    const compact = value.replace(/\s+/g, "").toUpperCase();
+    return /^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(compact) ? compact.match(/.{1,4}/g) : [value.trim()];
   }
 
-  // Draws the code as one SVG path with a 4-module quiet zone, black on white
-  // in both themes so every camera reads it.
-  function qrSvg(text) {
-    const code = window.qrcode(0, "M");
-    code.addData(text);
-    code.make();
-    const n = code.getModuleCount();
-    const size = n + 8;
-    let d = "";
-    for (let r = 0; r < n; r++) {
-      for (let c = 0; c < n; c++) if (code.isDark(r, c)) d += `M${c + 4} ${r + 4}h1v1h-1z`;
-    }
-    return `<svg viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" aria-hidden="true"><rect width="${size}" height="${size}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
-  }
-
-  async function openQr(item) {
+  async function keepScreenOn(on) {
     try {
-      await loadQrLib();
-    } catch (_) {
-      showToast(t("qrFailed"));
-      return;
-    }
-    qrItem = item;
-    $("#qrTitle").textContent = item.title;
-    qrCode.innerHTML = qrSvg(item.value.replace(/\s+/g, "").toUpperCase());
-    qrCode.setAttribute("aria-label", t("qrAria", item.title));
-    $("#qrHolder").textContent = item.holder;
-    $("#qrHolder").hidden = !item.holder;
-    $("#qrValue").textContent = item.value;
-    showResults(false);
-    openOverlay(qrSheet);
+      if (on && !wakeLock && navigator.wakeLock) {
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => { wakeLock = null; });
+      } else if (!on && wakeLock) {
+        await wakeLock.release();
+      }
+    } catch (_) { /* not supported or not allowed: the screen just dims as usual */ }
   }
 
-  $("#qrClose").addEventListener("click", () => closeOverlay(qrSheet));
-  $("#qrCopy").addEventListener("click", async () => {
-    if (!qrItem) return;
-    showToast(t((await copyText(qrItem.value)) ? "copiedLive" : "copyFailed", qrItem.title));
+  function openBig(item) {
+    bigItem = item;
+    $("#ibanTitle").textContent = item.title;
+    ibanHolder.textContent = item.holder;
+    ibanHolder.hidden = !item.holder;
+    ibanValue.replaceChildren(...ibanGroups(item.value).map((g) => {
+      const span = document.createElement("span");
+      span.textContent = g;
+      return span;
+    }));
+    ibanValue.setAttribute("aria-label", item.value);
+    showResults(false);
+    openOverlay(ibanSheet);
+    keepScreenOn(true);
+  }
+
+  // Coming back to the app drops the wake lock; take it again while open.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && ibanSheet.classList.contains("open")) keepScreenOn(true);
+  });
+
+  $("#ibanClose").addEventListener("click", () => closeOverlay(ibanSheet));
+  $("#ibanCopy").addEventListener("click", async () => {
+    if (!bigItem) return;
+    showToast(t((await copyText(bigItem.value)) ? "copiedLive" : "copyFailed", bigItem.title));
   });
 
   // ---------------------------------------------------------------------------
@@ -918,12 +909,13 @@
 
   function closeOverlay(el) {
     el.classList.remove("open");
+    if (el === ibanSheet) keepScreenOn(false);
     if (!document.querySelector(".overlay.open")) document.body.classList.remove("locked");
   }
 
   // Close on backdrop tap, but only if the press also started on the backdrop.
   // This prevents the long-press release from instantly closing the editor.
-  [editor, menu, qrSheet].forEach((overlay) => {
+  [editor, menu, ibanSheet].forEach((overlay) => {
     let downOnBackdrop = false;
     overlay.addEventListener("pointerdown", (e) => { downOnBackdrop = e.target === overlay; });
     overlay.addEventListener("click", (e) => {
@@ -935,7 +927,7 @@
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     if (pwSheet.classList.contains("open")) finishPassword("cancel");
-    else if (qrSheet.classList.contains("open")) closeOverlay(qrSheet);
+    else if (ibanSheet.classList.contains("open")) closeOverlay(ibanSheet);
     else if (editor.classList.contains("open")) closeOverlay(editor);
     else if (menu.classList.contains("open")) closeOverlay(menu);
   });

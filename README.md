@@ -24,7 +24,7 @@ Available in Turkish and English.
 - **Hide in list:** sensitive values such as IBANs, ID numbers and Wi-Fi passwords show as dots but still copy on tap.
 - **Optional sync:** sign in with Google to see the same list on your phone and computer. Entries are encrypted on the device with a sync password before upload.
 - **Backup and restore:** export the whole list as a JSON file (through the share sheet where the browser supports it) and restore it on any device.
-- **IBAN as a QR code:** IBAN entries can be shown as a QR code for the other person to scan with their camera. It holds only the IBAN (no spaces), so it pastes cleanly into a bank form; an optional account holder's name is printed under the code.
+- **IBAN on the big display:** IBAN entries can be shown large, in groups of four, with an optional account holder's name, for the other person to read off the screen. The screen stays on while it is open where the browser supports it.
 - **Recommend to a friend:** opens the phone's share sheet with a short message and the link; where there is no share sheet, the message is copied instead. Shared links show a preview image (Open Graph).
 - **Turkish and English:** picks the browser language on first launch and can be switched under Settings. Built-in field names follow the language; fields you renamed stay as they are.
 - **Installable and offline:** add it to the home screen on Android or iOS. It works without a connection after the first visit.
@@ -48,7 +48,6 @@ Without sync, clearing browser data or switching phones will lose the list unles
 | `css/style.css` | Styles |
 | `js/boot.js` | Runs before the first paint: applies the saved theme and hides the list while the app lock is on |
 | `js/lock.js` | App lock: PIN screen, throttling, Face ID / fingerprint through WebAuthn |
-| `js/vendor/qrcode.js` | [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) 1.4.4 by Kazuhiko Arase (MIT), unchanged; loaded the first time a QR code is shown |
 | `js/fields.js` | Field types: keyboard, formatting and validation per type |
 | `js/app.js` | App logic: list, search, editor, backup, install hint, language and theme switch, sync UI |
 | `js/sync.js` | Optional sync: Google sign-in and Firestore (loaded only when sync is used) |
@@ -110,6 +109,6 @@ Each entry is stored as:
 { "id": "…", "emoji": "🏠", "title": "Ev adresi", "value": "…", "hidden": false, "type": "longText", "holder": "", "updatedAt": 1727250000000 }
 ```
 
-`holder` is the account holder's name, used only by IBAN entries for the QR code; it is empty everywhere else.
+`holder` is the account holder's name, used only by IBAN entries on the big display; it is empty everywhere else.
 
 Every record loaded from storage or a backup passes through `normalizeItem`, so older data keeps loading safely. When extending the format, only add fields with defaults; never rename a field or make one required.

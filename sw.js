@@ -11,7 +11,6 @@ const ASSETS = [
   "./js/boot.js",
   "./js/fields.js",
   "./js/lock.js",
-  "./js/vendor/qrcode.js",
   "./js/app.js",
   "./js/sync.js",
   "./js/sync-core.js",

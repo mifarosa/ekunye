@@ -128,7 +128,7 @@
       <div id="holderWrap" hidden>
         <label class="field-label" for="holderInput" data-i18n="holderLabel">Hesap sahibinin adı</label>
         <input id="holderInput" class="input" autocomplete="off" autocapitalize="words" spellcheck="false" data-i18n-placeholder="holderPlaceholder" placeholder="Ad Soyad">
-        <p class="field-note" data-i18n="holderNote">İsteğe bağlı; karekodun altında görünür.</p>
+        <p class="field-note" data-i18n="holderNote">İsteğe bağlı; IBAN büyük gösterilirken üstünde görünür.</p>
       </div>
 
       <label class="toggle">
@@ -149,20 +149,18 @@
     </div>
   </div>
 
-  <!-- IBAN as a QR code, for the other person to scan -->
-  <div id="qrSheet" class="overlay" role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+  <!-- IBAN on the big display, for the other person to read -->
+  <div id="ibanSheet" class="overlay" role="dialog" aria-modal="true" aria-labelledby="ibanTitle">
     <div class="sheet">
-      <h2 id="qrTitle"></h2>
-      <div class="qr-card">
-        <div id="qrCode" class="qr-code" role="img"></div>
-        <p id="qrHolder" class="qr-holder"></p>
-        <p id="qrValue" class="qr-value"></p>
+      <h2 id="ibanTitle"></h2>
+      <div class="iban-card">
+        <p id="ibanHolder" class="iban-holder"></p>
+        <p id="ibanValue" class="iban-value" role="text"></p>
       </div>
-      <p class="menu-text" data-i18n="qrNote">Karşı taraf telefonunun kamerasıyla okutup IBAN'ı kopyalayabilir.</p>
       <div class="sheet-actions">
-        <button id="qrCopy" class="btn quiet" type="button" data-i18n="copyBtn">Kopyala</button>
+        <button id="ibanCopy" class="btn quiet" type="button" data-i18n="copyBtn">Kopyala</button>
         <span class="spacer"></span>
-        <button id="qrClose" class="btn primary" type="button" data-i18n="close">Kapat</button>
+        <button id="ibanClose" class="btn primary" type="button" data-i18n="close">Kapat</button>
       </div>
     </div>
   </div>
