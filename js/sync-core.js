@@ -68,9 +68,9 @@ export async function verifyCheck(key, check, uid) {
 
 // Merges the local list with the cloud copy, entry by entry; the newer
 // `updatedAt` wins, and deletions travel as tombstones.
-//   local:      [{ id, emoji, title, value, hidden, updatedAt }] in list order
+//   local:      [{ id, emoji, title, value, hidden, type, holder, updatedAt }] in list order
 //   tombstones: { id: deletedAt }
-//   remote:     Map id -> { updatedAt, deleted, data?: { emoji, title, value, hidden, pos } }
+//   remote:     Map id -> { updatedAt, deleted, data?: { emoji, title, value, hidden, type, holder, pos } }
 //   firstLink:  true the first time this device joins this account. If the
 //               account already holds entries (live or deleted), the account's
 //               list wins: this device's empty starter entries are dropped

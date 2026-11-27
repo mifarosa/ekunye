@@ -125,6 +125,11 @@
       <div id="bloodChips" class="chips blood-chips" hidden></div>
       <textarea id="valueInput" class="input" placeholder="Buraya yaz" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
       <p id="valueWarn" class="field-warn" aria-live="polite"></p>
+      <div id="holderWrap" hidden>
+        <label class="field-label" for="holderInput" data-i18n="holderLabel">Hesap sahibinin adı</label>
+        <input id="holderInput" class="input" autocomplete="off" autocapitalize="words" spellcheck="false" data-i18n-placeholder="holderPlaceholder" placeholder="Ad Soyad">
+        <p class="field-note" data-i18n="holderNote">İsteğe bağlı; karekodun altında görünür.</p>
+      </div>
 
       <label class="toggle">
         <span class="toggle-text">
@@ -140,6 +145,24 @@
         <span class="spacer"></span>
         <button id="cancelBtn" class="btn quiet" data-i18n="cancel">Vazgeç</button>
         <button id="saveBtn" class="btn primary" data-i18n="save">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IBAN as a QR code, for the other person to scan -->
+  <div id="qrSheet" class="overlay" role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+    <div class="sheet">
+      <h2 id="qrTitle"></h2>
+      <div class="qr-card">
+        <div id="qrCode" class="qr-code" role="img"></div>
+        <p id="qrHolder" class="qr-holder"></p>
+        <p id="qrValue" class="qr-value"></p>
+      </div>
+      <p class="menu-text" data-i18n="qrNote">Karşı taraf telefonunun kamerasıyla okutup IBAN'ı kopyalayabilir.</p>
+      <div class="sheet-actions">
+        <button id="qrCopy" class="btn quiet" type="button" data-i18n="copyBtn">Kopyala</button>
+        <span class="spacer"></span>
+        <button id="qrClose" class="btn primary" type="button" data-i18n="close">Kapat</button>
       </div>
     </div>
   </div>
