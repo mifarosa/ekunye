@@ -201,6 +201,8 @@
   const toastText = $("#toastText");
   const toastAction = $("#toastAction");
   const importInput = $("#importInput");
+  const holderWrap = $("#holderWrap");
+  const holderInput = $("#holderInput");
   const liveEl = $("#live");
   const hiddenInput = $("#hiddenInput");
 
@@ -217,7 +219,8 @@
       ? crypto.randomUUID()
       : Date.now().toString(36) + Math.random().toString(36).slice(2);
 
-  // Current record shape: { id, emoji, title, value, hidden, type, updatedAt }.
+  // Current record shape: { id, emoji, title, value, hidden, type, holder, updatedAt }.
+  // `holder` is the account holder's name, shown with an IBAN on the big display.
   // Records saved before types existed take the type of the starter field
   // their title matches, or plain text.
   // Every record from storage or a backup file goes through this function, so
@@ -235,6 +238,7 @@
       value: typeof x.value === "string" ? x.value : "",
       hidden: x.hidden === true,
       type: FIELDS.TYPES.includes(x.type) ? x.type : (findPreset(title) || { type: "text" }).type,
+      holder: typeof x.holder === "string" ? x.holder.trim() : "",
       updatedAt: Number.isFinite(x.updatedAt) ? x.updatedAt : 0,
     };
   }
@@ -273,7 +277,7 @@
   }
 
   // What sync compares: the visible fields plus the position in the list.
-  const contentKey = (item, pos) => JSON.stringify([item.emoji, item.title, item.value, item.hidden, item.type, pos]);
+  const contentKey = (item, pos) => JSON.stringify([item.emoji, item.title, item.value, item.hidden, item.type, item.holder, pos]);
   const snapshotOf = (list) => new Map(list.map((item, pos) => [item.id, contentKey(item, pos)]));
 
   function persist() {
@@ -320,7 +324,7 @@
   }
 
   function seedPresets() {
-    return PRESETS.filter((p) => p.seed).map((p) => ({ id: uid(), emoji: p.emoji, title: presetTitle(p), value: "", hidden: !!p.hidden, type: p.type }));
+    return PRESETS.filter((p) => p.seed).map((p) => ({ id: uid(), emoji: p.emoji, title: presetTitle(p), value: "", hidden: !!p.hidden, type: p.type, holder: "" }));
   }
 
   // Ask the browser not to evict our data under storage pressure (Chromium).
@@ -513,6 +517,7 @@
       row.append(emoji, text);
       attachPressHandlers(row, item.id);
       li.appendChild(buttons ? withButtons(item, row, title, isEmpty) : row);
+      if (!buttons && canShowBig(item)) li.appendChild(showPill(item));
       listEl.appendChild(li);
     }
     emptyEl.hidden = items.length > 0;
@@ -523,6 +528,8 @@
   // path, so the row itself leaves the tab order.
   const COPY_ICON = '<svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
   const EDIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>';
+
+  const SHOW_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
 
   function withButtons(item, row, titleEl, isEmpty) {
     const line = document.createElement("div");
@@ -545,7 +552,17 @@
     edit.setAttribute("aria-label", `${t("editBtn")}: ${item.title}`);
     edit.addEventListener("click", () => openEditor(item.id));
 
-    line.append(row, copy, edit);
+    if (canShowBig(item)) {
+      const show = document.createElement("button");
+      show.type = "button";
+      show.className = "item-btn";
+      show.innerHTML = SHOW_ICON;
+      show.setAttribute("aria-label", t("showBigAria", item.title));
+      show.addEventListener("click", () => openBig(item));
+      line.append(row, show, copy, edit);
+    } else {
+      line.append(row, copy, edit);
+    }
     return line;
   }
 
@@ -815,6 +832,106 @@
   });
 
   // ---------------------------------------------------------------------------
+  // IBAN on the big display: a full-screen view with the IBAN on one line,
+  // sideways (css/style.css turns it on an upright phone), and the holder's
+  // name above it, for the other person to read off the screen. It has its
+  // own history entry so the phone's back button closes it, and the screen
+  // is kept on while it is open where the browser allows it.
+  // ---------------------------------------------------------------------------
+  const ibanSheet = $("#ibanSheet");
+  const ibanValue = $("#ibanValue");
+  const ibanHolder = $("#ibanHolder");
+  let bigItem = null;
+  let wakeLock = null;
+
+  const canShowBig = (item) => item.type === "iban" && !!item.value.trim();
+
+  function showPill(item) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "show-pill";
+    b.innerHTML = `${SHOW_ICON}<span></span>`;
+    b.lastChild.textContent = t("showBig");
+    b.setAttribute("aria-label", t("showBigAria", item.title));
+    b.addEventListener("click", () => openBig(item));
+    return b;
+  }
+
+  // "TR330006…" in groups of four on one line; anything else as typed.
+  function ibanLine(value) {
+    const compact = value.replace(/\s+/g, "").toUpperCase();
+    return /^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(compact) ? compact.replace(/(.{4})(?=.)/g, "$1 ") : value.trim();
+  }
+
+  async function keepScreenOn(on) {
+    try {
+      if (on && !wakeLock && navigator.wakeLock) {
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => { wakeLock = null; });
+      } else if (!on && wakeLock) {
+        await wakeLock.release();
+      }
+    } catch (_) { /* not supported or not allowed: the screen just dims as usual */ }
+  }
+
+  // Shrinks the IBAN until its one line fits, for long values or narrow screens.
+  function fitBigValue() {
+    ibanValue.style.fontSize = "";
+    let size = parseFloat(getComputedStyle(ibanValue).fontSize);
+    while (ibanValue.scrollWidth > ibanValue.clientWidth && size > 12) {
+      size -= 1;
+      ibanValue.style.fontSize = `${size}px`;
+    }
+  }
+
+  function openBig(item) {
+    bigItem = item;
+    $("#ibanTitle").textContent = item.title;
+    ibanHolder.textContent = item.holder;
+    ibanHolder.hidden = !item.holder;
+    ibanValue.textContent = ibanLine(item.value);
+    showResults(false);
+    ibanSheet.hidden = false;
+    document.body.classList.add("locked");
+    fitBigValue();
+    keepScreenOn(true);
+    $("#ibanClose").focus({ preventScroll: true });
+    try { history.pushState({ ekunyeBig: true }, ""); } catch (_) {}
+  }
+
+  // Closing goes through history when the view added an entry, so the back
+  // button and the Close button end up in the same place.
+  function closeBig() {
+    if (ibanSheet.hidden) return;
+    if (history.state && history.state.ekunyeBig) { history.back(); return; }
+    hideBig();
+  }
+
+  function hideBig() {
+    ibanSheet.hidden = true;
+    if (!document.querySelector(".overlay.open")) document.body.classList.remove("locked");
+    keepScreenOn(false);
+  }
+
+  window.addEventListener("popstate", () => { if (!ibanSheet.hidden) hideBig(); });
+  window.addEventListener("resize", () => { if (!ibanSheet.hidden) fitBigValue(); });
+  // Coming back to the app drops the wake lock; take it again while open.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && !ibanSheet.hidden) keepScreenOn(true);
+  });
+
+  $("#ibanClose").addEventListener("click", closeBig);
+  // The button itself confirms: a toast would sit sideways to the turned view.
+  $("#ibanCopy").addEventListener("click", async (e) => {
+    if (!bigItem) return;
+    const btn = e.currentTarget;
+    const ok = await copyText(bigItem.value);
+    btn.textContent = t(ok ? "copied" : "copyFailed");
+    clearTimeout(btn._timer);
+    btn._timer = setTimeout(() => { btn.textContent = t("copyBtn"); }, 1400);
+  });
+
+  // ---------------------------------------------------------------------------
   // Sheets (shared open/close)
   // ---------------------------------------------------------------------------
   function openOverlay(el) {
@@ -841,6 +958,7 @@
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     if (pwSheet.classList.contains("open")) finishPassword("cancel");
+    else if (!ibanSheet.hidden) closeBig();
     else if (editor.classList.contains("open")) closeOverlay(editor);
     else if (menu.classList.contains("open")) closeOverlay(menu);
   });
@@ -913,6 +1031,7 @@
     valueInput.autocapitalize = cfg.autocapitalize || "sentences";
     valueInput.classList.toggle("single", !cfg.multiline);
     bloodChips.hidden = type !== "blood";
+    holderWrap.hidden = type !== "iban";
     checkValue();
   }
 
@@ -990,6 +1109,7 @@
     titleInput.value = item ? item.title : "";
     valueInput.value = item ? item.value : "";
     hiddenInput.checked = item ? item.hidden : false;
+    holderInput.value = item ? item.holder : "";
     editPreset = item ? findPreset(item.title) : null;
     setEditType(item ? item.type : "text");
     syncEmojiSelection();
@@ -1017,6 +1137,7 @@
       value: FIELDS.format(editType, valueInput.value),
       hidden: hiddenInput.checked,
       type: editType,
+      holder: editType === "iban" ? holderInput.value.trim() : "",
     };
     const idx = items.findIndex((i) => i.id === entry.id);
     if (idx >= 0) items[idx] = entry;

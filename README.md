@@ -24,6 +24,7 @@ Available in Turkish and English.
 - **Hide in list:** sensitive values such as IBANs, ID numbers and Wi-Fi passwords show as dots but still copy on tap.
 - **Optional sync:** sign in with Google to see the same list on your phone and computer. Entries are encrypted on the device with a sync password before upload.
 - **Backup and restore:** export the whole list as a JSON file (through the share sheet where the browser supports it) and restore it on any device.
+- **IBAN on the big display:** IBAN entries open in a full-screen view with the IBAN on one line, as large as fits, and an optional account holder's name above it, for the other person to read off the screen. On an upright phone the view is turned sideways so the IBAN runs along the long edge; the back button closes it, and the screen stays on while it is open where the browser supports it.
 - **Recommend to a friend:** opens the phone's share sheet with a short message and the link; where there is no share sheet, the message is copied instead. Shared links show a preview image (Open Graph).
 - **Turkish and English:** picks the browser language on first launch and can be switched under Settings. Built-in field names follow the language; fields you renamed stay as they are.
 - **Installable and offline:** add it to the home screen on Android or iOS. It works without a connection after the first visit.
@@ -105,7 +106,9 @@ Entries merge one by one, and the most recent change to an entry wins.
 Each entry is stored as:
 
 ```json
-{ "id": "…", "emoji": "🏠", "title": "Ev adresi", "value": "…", "hidden": false, "type": "longText", "updatedAt": 1727250000000 }
+{ "id": "…", "emoji": "🏠", "title": "Ev adresi", "value": "…", "hidden": false, "type": "longText", "holder": "", "updatedAt": 1727250000000 }
 ```
+
+`holder` is the account holder's name, used only by IBAN entries on the big display; it is empty everywhere else.
 
 Every record loaded from storage or a backup passes through `normalizeItem`, so older data keeps loading safely. When extending the format, only add fields with defaults; never rename a field or make one required.

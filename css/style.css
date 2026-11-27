@@ -230,6 +230,34 @@ body.layout-buttons #list li + li::before { width: 100%; }
 @media (hover: hover) { .item-btn:hover { background: var(--faint); color: var(--ink); } }
 .item-btn svg { width: 21px; height: 21px; }
 .item-btn.off { visibility: hidden; }
+
+/* IBAN on the big display */
+.show-pill { display: flex; align-items: center; gap: 6px; margin: -16px auto 18px; border: 0; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; background: var(--faint); color: var(--muted); }
+.show-pill:active { background: var(--line); }
+.show-pill svg { width: 16px; height: 16px; }
+/* Full screen, sideways: on a phone held upright the frame is turned 90°
+   so the IBAN runs along the long side; held sideways it is shown as is. */
+.big-view { position: fixed; inset: 0; z-index: 25; background: var(--bg); overflow: hidden; }
+.big-view[hidden] { display: none; }
+.big-frame {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) 24px max(16px, env(safe-area-inset-bottom, 0px));
+  text-align: center;
+}
+@media (orientation: portrait) {
+  .big-frame {
+    top: 50%; left: 50%; width: 100vh; height: 100vw;
+    width: 100dvh;
+    transform: translate(-50%, -50%) rotate(90deg);
+    padding: 16px max(24px, env(safe-area-inset-top, 0px)) 16px max(24px, env(safe-area-inset-bottom, 0px));
+  }
+}
+.big-title { margin: 0; font-size: min(2.2vmax, 20px); font-weight: 500; color: var(--muted); }
+.big-holder { margin: 1.2vmax 0 0; font-size: min(3.8vmax, 48px); font-weight: 600; }
+.big-holder[hidden] { display: none; }
+.big-value { margin: 1.6vmax 0 0; max-width: 100%; font-size: min(5.1vmax, 80px); font-weight: 600; line-height: 1.2; letter-spacing: 0.02em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.big-actions { display: flex; gap: 10px; margin-top: 3vmax; }
 .copy-btn .i-check { display: none; }
 .item-line.copied .copy-btn { color: var(--accent); }
 .item-line.copied .copy-btn .i-copy { display: none; }
@@ -312,6 +340,8 @@ textarea.input.single { min-height: 0; height: 50px; resize: none; }
 .blood-chips[hidden] { display: none; }
 .blood-chips .chip.selected { background: var(--accent); color: var(--on-accent); }
 .field-warn { min-height: 1.3em; margin: 8px 2px 0; font-size: 13px; color: var(--warn); }
+.field-note { margin: 8px 2px 0; font-size: 13px; color: var(--muted); }
+#holderWrap[hidden] { display: none; }
 
 .preset-group { border-bottom: 1px solid var(--line); }
 .preset-group summary {

@@ -125,6 +125,11 @@
       <div id="bloodChips" class="chips blood-chips" hidden></div>
       <textarea id="valueInput" class="input" placeholder="Buraya yaz" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
       <p id="valueWarn" class="field-warn" aria-live="polite"></p>
+      <div id="holderWrap" hidden>
+        <label class="field-label" for="holderInput" data-i18n="holderLabel">Hesap sahibinin adı</label>
+        <input id="holderInput" class="input" autocomplete="off" autocapitalize="words" spellcheck="false" data-i18n-placeholder="holderPlaceholder" placeholder="Ad Soyad">
+        <p class="field-note" data-i18n="holderNote">İsteğe bağlı; IBAN büyük gösterilirken üstünde görünür.</p>
+      </div>
 
       <label class="toggle">
         <span class="toggle-text">
@@ -140,6 +145,19 @@
         <span class="spacer"></span>
         <button id="cancelBtn" class="btn quiet" data-i18n="cancel">Vazgeç</button>
         <button id="saveBtn" class="btn primary" data-i18n="save">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IBAN on the big display: full screen and sideways, for the other person to read -->
+  <div id="ibanSheet" class="big-view" role="dialog" aria-modal="true" aria-labelledby="ibanTitle" hidden>
+    <div class="big-frame">
+      <p id="ibanTitle" class="big-title"></p>
+      <p id="ibanHolder" class="big-holder"></p>
+      <p id="ibanValue" class="big-value"></p>
+      <div class="big-actions">
+        <button id="ibanCopy" class="btn quiet" type="button" data-i18n="copyBtn">Kopyala</button>
+        <button id="ibanClose" class="btn primary" type="button" data-i18n="close">Kapat</button>
       </div>
     </div>
   </div>
