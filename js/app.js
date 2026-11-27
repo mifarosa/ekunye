@@ -832,9 +832,11 @@
   });
 
   // ---------------------------------------------------------------------------
-  // IBAN on the big display: large, in groups of four, with the holder's
-  // name, for the other person to read off the screen. The screen is kept on
-  // while it is open where the browser allows it.
+  // IBAN on the big display: a full-screen view with the IBAN on one line,
+  // sideways (css/style.css turns it on an upright phone), and the holder's
+  // name above it, for the other person to read off the screen. It has its
+  // own history entry so the phone's back button closes it, and the screen
+  // is kept on while it is open where the browser allows it.
   // ---------------------------------------------------------------------------
   const ibanSheet = $("#ibanSheet");
   const ibanValue = $("#ibanValue");
@@ -855,10 +857,10 @@
     return b;
   }
 
-  // "TR330006…" becomes groups of four; anything that is not an IBAN is shown as typed.
-  function ibanGroups(value) {
+  // "TR330006…" in groups of four on one line; anything else as typed.
+  function ibanLine(value) {
     const compact = value.replace(/\s+/g, "").toUpperCase();
-    return /^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(compact) ? compact.match(/.{1,4}/g) : [value.trim()];
+    return /^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(compact) ? compact.replace(/(.{4})(?=.)/g, "$1 ") : value.trim();
   }
 
   async function keepScreenOn(on) {
@@ -872,31 +874,61 @@
     } catch (_) { /* not supported or not allowed: the screen just dims as usual */ }
   }
 
+  // Shrinks the IBAN until its one line fits, for long values or narrow screens.
+  function fitBigValue() {
+    ibanValue.style.fontSize = "";
+    let size = parseFloat(getComputedStyle(ibanValue).fontSize);
+    while (ibanValue.scrollWidth > ibanValue.clientWidth && size > 12) {
+      size -= 1;
+      ibanValue.style.fontSize = `${size}px`;
+    }
+  }
+
   function openBig(item) {
     bigItem = item;
     $("#ibanTitle").textContent = item.title;
     ibanHolder.textContent = item.holder;
     ibanHolder.hidden = !item.holder;
-    ibanValue.replaceChildren(...ibanGroups(item.value).map((g) => {
-      const span = document.createElement("span");
-      span.textContent = g;
-      return span;
-    }));
-    ibanValue.setAttribute("aria-label", item.value);
+    ibanValue.textContent = ibanLine(item.value);
     showResults(false);
-    openOverlay(ibanSheet);
+    ibanSheet.hidden = false;
+    document.body.classList.add("locked");
+    fitBigValue();
     keepScreenOn(true);
+    $("#ibanClose").focus({ preventScroll: true });
+    try { history.pushState({ ekunyeBig: true }, ""); } catch (_) {}
   }
 
+  // Closing goes through history when the view added an entry, so the back
+  // button and the Close button end up in the same place.
+  function closeBig() {
+    if (ibanSheet.hidden) return;
+    if (history.state && history.state.ekunyeBig) { history.back(); return; }
+    hideBig();
+  }
+
+  function hideBig() {
+    ibanSheet.hidden = true;
+    if (!document.querySelector(".overlay.open")) document.body.classList.remove("locked");
+    keepScreenOn(false);
+  }
+
+  window.addEventListener("popstate", () => { if (!ibanSheet.hidden) hideBig(); });
+  window.addEventListener("resize", () => { if (!ibanSheet.hidden) fitBigValue(); });
   // Coming back to the app drops the wake lock; take it again while open.
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && ibanSheet.classList.contains("open")) keepScreenOn(true);
+    if (document.visibilityState === "visible" && !ibanSheet.hidden) keepScreenOn(true);
   });
 
-  $("#ibanClose").addEventListener("click", () => closeOverlay(ibanSheet));
-  $("#ibanCopy").addEventListener("click", async () => {
+  $("#ibanClose").addEventListener("click", closeBig);
+  // The button itself confirms: a toast would sit sideways to the turned view.
+  $("#ibanCopy").addEventListener("click", async (e) => {
     if (!bigItem) return;
-    showToast(t((await copyText(bigItem.value)) ? "copiedLive" : "copyFailed", bigItem.title));
+    const btn = e.currentTarget;
+    const ok = await copyText(bigItem.value);
+    btn.textContent = t(ok ? "copied" : "copyFailed");
+    clearTimeout(btn._timer);
+    btn._timer = setTimeout(() => { btn.textContent = t("copyBtn"); }, 1400);
   });
 
   // ---------------------------------------------------------------------------
@@ -909,13 +941,12 @@
 
   function closeOverlay(el) {
     el.classList.remove("open");
-    if (el === ibanSheet) keepScreenOn(false);
     if (!document.querySelector(".overlay.open")) document.body.classList.remove("locked");
   }
 
   // Close on backdrop tap, but only if the press also started on the backdrop.
   // This prevents the long-press release from instantly closing the editor.
-  [editor, menu, ibanSheet].forEach((overlay) => {
+  [editor, menu].forEach((overlay) => {
     let downOnBackdrop = false;
     overlay.addEventListener("pointerdown", (e) => { downOnBackdrop = e.target === overlay; });
     overlay.addEventListener("click", (e) => {
@@ -927,7 +958,7 @@
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     if (pwSheet.classList.contains("open")) finishPassword("cancel");
-    else if (ibanSheet.classList.contains("open")) closeOverlay(ibanSheet);
+    else if (!ibanSheet.hidden) closeBig();
     else if (editor.classList.contains("open")) closeOverlay(editor);
     else if (menu.classList.contains("open")) closeOverlay(menu);
   });

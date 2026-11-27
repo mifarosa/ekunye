@@ -149,17 +149,14 @@
     </div>
   </div>
 
-  <!-- IBAN on the big display, for the other person to read -->
-  <div id="ibanSheet" class="overlay" role="dialog" aria-modal="true" aria-labelledby="ibanTitle">
-    <div class="sheet">
-      <h2 id="ibanTitle"></h2>
-      <div class="iban-card">
-        <p id="ibanHolder" class="iban-holder"></p>
-        <p id="ibanValue" class="iban-value" role="text"></p>
-      </div>
-      <div class="sheet-actions">
+  <!-- IBAN on the big display: full screen and sideways, for the other person to read -->
+  <div id="ibanSheet" class="big-view" role="dialog" aria-modal="true" aria-labelledby="ibanTitle" hidden>
+    <div class="big-frame">
+      <p id="ibanTitle" class="big-title"></p>
+      <p id="ibanHolder" class="big-holder"></p>
+      <p id="ibanValue" class="big-value"></p>
+      <div class="big-actions">
         <button id="ibanCopy" class="btn quiet" type="button" data-i18n="copyBtn">Kopyala</button>
-        <span class="spacer"></span>
         <button id="ibanClose" class="btn primary" type="button" data-i18n="close">Kapat</button>
       </div>
     </div>
